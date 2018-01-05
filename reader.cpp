@@ -27,6 +27,14 @@ float** create_mat(int h, int w){
     return ptr;
 }
 
+void free_mat(float **toFree) {
+    if(toFree == NULL) {
+        return;
+    }
+
+    delete[] toFree[0];
+    delete[] toFree;
+}
 
 void mul_mat(float** a, float** b, float** c, int h, int hw, int w){
     for(int i=0;i<h;i++){
@@ -215,6 +223,9 @@ void bp_w(float** x, float** prev, float** r, int hw, int h, int w){
     float** xT = create_mat(h, hw);
     transp_mat(x, xT, hw, h);
     mul_mat(xT, prev, r, h, hw, w);
+
+    free_mat(xT);
+    xT = NULL;
 }
 
 // R = X * W   _ dR/dX = prev * W^T               w.w  prev.h  w.h
@@ -222,6 +233,9 @@ void bp_x(float** w_, float** prev, float** r, int hw, int h, int w){
     float** wT = create_mat(hw, w);
     transp_mat(w_, wT, w, hw);
     mul_mat(prev, wT, r, h, hw, w);
+
+    free_mat(wT);
+    wT = NULL;
 }
 
 // sum up multiple output influences h:prev.h  w:prev.w
@@ -374,6 +388,50 @@ int main(int argc, char const *argv[]){
         }
     }
 
+    free_mat(d_b1);
+    d_b1 = NULL;
+    free_mat(d_w1);
+    d_w1 = NULL;
+    free_mat(d_rb1);
+    d_rb1 = NULL;
+    free_mat(d_rr1);
+    d_rr1 = NULL;
+    free_mat(d_b2);
+    d_b2 = NULL;
+    free_mat(d_w2);
+    d_w2 = NULL;
+    free_mat(d_rb2);
+    d_rb2 = NULL;
+    free_mat(probs);
+    probs = NULL;
+    free_mat(er);
+    er = NULL;
+    free_mat(rb2);
+    rb2 = NULL;
+    free_mat(rw2);
+    rw2 = NULL;
+    free_mat(b2);
+    b2 = NULL;
+    free_mat(w2);
+    w2 = NULL;
+    free_mat(rr1);
+    rr1 = NULL;
+    free_mat(rb1);
+    rb1 = NULL;
+    free_mat(rw1);
+    rw1 = NULL;
+    free_mat(b1);
+    b1 = NULL;
+    free_mat(w1);
+    w1 = NULL;
+    free_mat(x);
+    x = NULL;
+
+    delete[] test_data;
+    test_data = NULL;
+    delete[] train_data;
+    train_data = NULL;
+    
     return 0;
 }
 
