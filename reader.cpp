@@ -297,11 +297,16 @@ int main(int argc, char const *argv[]){
     get_data(test_data, TEST_SIZE, "./data/train-labels.idx1-ubyte", "./data/train-images.idx3-ubyte");
 
     // define mats for input/result/weight/biases and intermediary resuls
+    //x := array of vectors (each vector is one image) - input neurons
     float** x = create_mat(BATCHSIZE, IMAGE_WIDTH*IMAGE_WIDTH);
 
+    //w1 := first hidden layer with weights
     float** w1 = create_mat(IMAGE_WIDTH*IMAGE_WIDTH, FIRST_LAYER_NEURONS);
+    //b1 := first hidden layer with biases
     float** b1 = create_mat(1, FIRST_LAYER_NEURONS);
+    //rw1 := results of mat_mul(x, w1) - weighting the input data
     float** rw1 = create_mat(BATCHSIZE, FIRST_LAYER_NEURONS);
+    //rb1 := results of adding bias to rw1
     float** rb1 = create_mat(BATCHSIZE, FIRST_LAYER_NEURONS);
 
     float** rr1 = create_mat(BATCHSIZE, FIRST_LAYER_NEURONS);
@@ -336,13 +341,26 @@ int main(int argc, char const *argv[]){
     for(int train_step=0;train_step<(TRAIN_SIZE/BATCHSIZE)*EPOCHS; train_step++) {
         load_input(x, train_data, BATCHSIZE, train_step * BATCHSIZE, TRAIN_SIZE);
 
+        //processing the first hidden layer:
+        /*  for each neuron (j): 
+                cell_body_sum = sum (weigths[i] * input[i] + bias[j]), i=1 to weights.length()
+                firing_rate = ReLU activation function
+        */
+        //weigthing the input data
         mul_mat(x, w1, rw1, BATCHSIZE, IMAGE_WIDTH * IMAGE_WIDTH, FIRST_LAYER_NEURONS);
+        //add bias to each product
         broadcasted_add(rw1, b1, rb1, BATCHSIZE, FIRST_LAYER_NEURONS);
+        //calculate the firingrate of each neuron
         relu_mat(rb1, rr1, BATCHSIZE, FIRST_LAYER_NEURONS);
+
+        //processing the second hidden layer
+        //weigthing the output data of the previous hidden layer (layer 1)
         mul_mat(rr1, w2, rw2, BATCHSIZE, FIRST_LAYER_NEURONS, SECOND_LAYER_NEURONS);
+        //add bias to each product
         broadcasted_add(rw2, b2, rb2, BATCHSIZE, SECOND_LAYER_NEURONS);
 
         exp_mat(rb2, er, BATCHSIZE, CLASSES);
+        //interpret results as probabilty - the sum of all output neurons must sum to one
         softmax_mat(er, probs, BATCHSIZE, CLASSES);
         loss = ce_loss(train_data, probs, BATCHSIZE, CLASSES, train_step, TRAIN_SIZE) / (float) BATCHSIZE;
 
