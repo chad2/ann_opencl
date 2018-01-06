@@ -7,6 +7,12 @@
 #include <time.h>
 #include <cstdlib>
 
+#define ReLU    4
+//ReLU 1 -> tanh
+//ReLU 2 -> sigmoid
+//ReLU 3 -> leaky
+//ReLU 4 -> max(x, 0)
+
 using namespace std;
 const int TRAIN_SIZE = 60000;
 const int TEST_SIZE = 10000;
@@ -154,7 +160,15 @@ void broadcasted_add(float** a, float** b, float** c, int h, int w){
 void relu_mat(float** a, float** b, int h, int w){
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
-            b[i][j] = (a[i][j] > 0) ? a[i][j] : 0;
+            #if ReLU == 1
+                b[i][j] = tanh(a[i][j]);
+            #elif ReLU == 2
+                b[i][j] = 1 / (1 + exp(- a[i][j]));
+            #elif ReLU == 3
+                b[i][j] = (a[i][j] > 0) ? a[i][j] : (0.01 * a[i][j]);
+            #else
+                b[i][j] = (a[i][j] > 0) ? a[i][j] : 0;
+            #endif
         }
     }
 }
