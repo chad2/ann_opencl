@@ -16,12 +16,12 @@
 using namespace std;
 const int TRAIN_SIZE = 60000;
 const int TEST_SIZE = 10000;
-const int BATCHSIZE = 10;
+const int BATCHSIZE = 100;
 const int IMAGE_WIDTH = 28;
 const int CLASSES = 10;
-const int FIRST_LAYER_NEURONS = 20;
+const int FIRST_LAYER_NEURONS = 50;
 const int SECOND_LAYER_NEURONS = CLASSES;
-const int EPOCHS = 2;
+const int EPOCHS = 5;
 
 
 float** create_mat(int h, int w){
@@ -57,7 +57,6 @@ void mul_mat(float** a, float** b, float** c, int h, int hw, int w){
 
 // transposes matrix a, result in b
 void transp_mat(float** a, float** b, int h, int w){
-    float tmp;
     for(int i=0;i<h;i++){
         for(int j=0;j<w;j++){
             b[j][i] = a[i][j];
@@ -267,12 +266,15 @@ void bp_b(float** prev, float** r, int h, int w){
 void bp_relu(float** x, float** prev, float** r, int h, int w){
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
-            if(x[i][j] < 0){
-                r[i][j] = 0;
-            }
-            else{
-                r[i][j] = prev[i][j];
-            }
+        	#if ReLU == 1  // tanh
+        		r[i][j] = 1/(pow(cosh(x[i][j]), 2)) * prev[i][j];
+        	#elif ReLU == 2  // sigmoid
+        		r[i][j] = 1/(1+exp(-x[i][j])) * 1-(1/(1+exp(-x[i][j])));
+        	#elif ReLU == 3  // leaky relu
+        		r[i][j] = (x[i][j] > 0) ? prev[i][j] : (0.01*prev[i][j]);
+        	#elif ReLU == 4  // relu
+        		r[i][j] = (x[i][j] > 0) ? prev[i][j] : 0;
+        	#endif
         }
     }
 }
@@ -331,7 +333,7 @@ int main(int argc, char const *argv[]){
 
 
     float loss;
-    float learning_rate = 0.05;
+    float learning_rate = 0.005;
     // training loop
     for(int train_step=0;train_step<(TRAIN_SIZE/BATCHSIZE)*EPOCHS; train_step++) {
         load_input(x, train_data, BATCHSIZE, train_step * BATCHSIZE, TRAIN_SIZE);
@@ -372,7 +374,7 @@ int main(int argc, char const *argv[]){
         //print_mat(d_b2, 1, SECOND_LAYER_NEURONS);
         //print_mat(d_rr1, BATCHSIZE, FIRST_LAYER_NEURONS);
         //print_mat(d_rb1, BATCHSIZE, FIRST_LAYER_NEURONS);
-        if((train_step%500)==0){  // evaluate current network state _ loss + test_accuracy
+        if((train_step%100)==0){  // evaluate current network state _ loss + test_accuracy
             load_input(x, test_data, BATCHSIZE, 0, TEST_SIZE);
 
             mul_mat(x, w1, rw1, BATCHSIZE, IMAGE_WIDTH * IMAGE_WIDTH, FIRST_LAYER_NEURONS);
