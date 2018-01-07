@@ -24,8 +24,9 @@ int main() {
         ann->backprop(true, step);
         ann->update_params(learning_rate);
         if(step%100==0){
-            ann->forward_pass(false, 0);
-            tst_acc = ann->calc_acc(false, 0);
+            int rand_index = rand() % TST_SIZE;  // test on random sample of test_data
+            ann->forward_pass(false, rand_index);
+            tst_acc = ann->calc_acc(false, rand_index);
             std::cout << "step: " << step << "/" << (TRN_SIZE/BATCH_SIZE)*EPOCHS;
             std::cout << "   trn_loss: " << trn_loss;
             std::cout << "   tst_acc: " << tst_acc << std::endl;

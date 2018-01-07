@@ -49,12 +49,6 @@ void Ann::transp_mat(float **in, float **res, int h, int w) {
 void Ann::load_input(float **x, imageLabel *il, int amount, int offset, int data_size) {
     for(int i=0; i<amount; i++){
         for(int j=0; j<IMAGE_SIZE*IMAGE_SIZE; j++){
-            x[i][j] = 3;
-            float a = 2;
-            imageLabel aa = il[(i+offset)%data_size];
-            char label = aa.label;
-            float as = il[(i+offset)%data_size].pixel[j/IMAGE_SIZE][j%IMAGE_SIZE];
-            float xd = 9;
             x[i][j] = il[(i+offset)%data_size].pixel[j/IMAGE_SIZE][j%IMAGE_SIZE];
             x[i][j] = (float)x[i][j]/255;  // map to 0-1
         }

@@ -41,9 +41,9 @@ private:
 
     float** w1;     // weights    -  first layer  -
     float** b1;     // bias                       -
-    float** r_w1;   // result x                   -
-    float** r_b1;   // result r_w1                -
-    float** r_a1;   // result activation of r_b   -
+    float** r_w1;   // result x*w1                -
+    float** r_b1;   // result r_w1+b1             -
+    float** r_a1;   // result activation of r_b1  -
     float** d_r_a1; //            -  first layer gradients  -
     float** d_r_b1; //                                      -
     float** d_w1;   //                                      -
