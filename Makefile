@@ -1,7 +1,6 @@
-SHELL:=/bin/bash
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-OBJS = reader.o
+OBJS = main.o Ann.o Reader.o imageLabel.o
 
 CPPFLAGS = -std=c++11 -Wall
 CFLAGS = -Wall 
@@ -18,12 +17,25 @@ else ifeq ($(BUILD_MODE),run)
 	CFLAGS += -pie -fPIE
 	LFLAGS += -pie -fPIE
 else
-	#$(error Build mode $(BUILD_MODE) not supported by this Makefile)
+	$(error Build mode $(BUILD_MODE) not supported by this Makefile)
 endif
 
-all:	reader
 
-reader:	$(OBJS)
+all:	main
+
+init:
+	mkdir -p data
+	wget -nc -P data http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+	gzip --name -d data/train-images-idx3-ubyte.gz
+	wget -nc -P data http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+	gzip --name -d data/train-labels-idx1-ubyte.gz
+	wget -nc -P data http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+	gzip --name -d data/t10k-images-idx3-ubyte.gz
+	wget -nc -P data http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+	gzip --name -d data/t10k-labels-idx1-ubyte.gz
+	
+
+main:	$(OBJS)
 	$(CXX) -o $@ $^ $(LFLAGS)
 
 %.o:	$(PROJECT_ROOT)%.cpp
@@ -33,4 +45,5 @@ reader:	$(OBJS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
 
 clean:
-	rm -fr reader $(OBJS)
+	rm -fr main $(OBJS)
+
