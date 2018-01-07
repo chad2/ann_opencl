@@ -301,6 +301,9 @@ Ann::~Ann() {
     free_mat(d_r_b1);
     free_mat(d_w1);
     free_mat(d_b1);
+
+    delete[] test_data;
+    delete[] train_data;
 }
 
 
