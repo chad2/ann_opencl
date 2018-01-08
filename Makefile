@@ -1,10 +1,10 @@
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-OBJS = main.o Ann.o Reader.o imageLabel.o
+OBJS = main.o Ann.o Reader.o imageLabel.o clMul.o
 
-CPPFLAGS = -std=c++11 -Wall
+CPPFLAGS = -std=c++11 -Wall -I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include"
 CFLAGS = -Wall 
-LFLAGS = -lm
+LFLAGS = -lm -L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" -lOpenCL 
 
 BUILD_MODE = run
 

@@ -1,12 +1,15 @@
 #ifndef UNTITLED3_ANN_H
 #define UNTITLED3_ANN_H
 
+#define USE_OPEN_CL 1
+
 #include "imageLabel.h"
 #include "Reader.h"
 #include "string"
 #include <iostream>
 #include <math.h>
 #include <limits>
+#include "clMul.h"
 
 class Ann {
 public:
@@ -36,6 +39,7 @@ private:
     imageLabel* train_data;
     imageLabel* test_data;
     Activation act;
+    clMul* clm;
 
     float** x;      // input matrix
 
@@ -51,8 +55,8 @@ private:
 
     float** w2;     // weights   -  second layer  -
     float** b2;     // bias                       -
-    float** r_w2;   // result x                   -
-    float** r_b2;   // result r_w1                -
+    float** r_w2;   // result r_a1*w2             -
+    float** r_b2;   // result r_w2+b2             -
     float** d_r_b2; //           -  second layer gradients  -
     float** d_w2;   //                                      -
     float** d_b2;   //                                      -
