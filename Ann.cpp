@@ -29,13 +29,23 @@ void Ann::free_mat(float **toFree) {
 
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
     #if USE_OPEN_CL == 0
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                float sum = 0;
-                for(int k=0;k<hw;k++){
-                    sum += a[i][k] * b[k][j];
+        for(int i=0; i < h; i++) {
+            for(int j=0; j < w; j++) {
+                c[i][j] = 0;
+            }
+        }
+
+        for(int kk=0; kk<hw; kk+=this->BlockSize) {
+            for(int jj=0; jj<w; jj+=this->BlockSize) {
+                for(int i=0; i<h; i++) {
+                    for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
+                        float sum = 0;
+                        for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
+                            sum += a[i][k] * b[k][j];
+                        }
+                        c[i][j] += sum;
+                    }
                 }
-                c[i][j] = sum;
             }
         }
     #elif USE_OPEN_CL == 1

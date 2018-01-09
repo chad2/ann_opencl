@@ -29,6 +29,7 @@ public:
     float calc_acc(bool training, int step);
 
 private:
+    const int BlockSize = 16;
     int train_size;
     int test_size;
     int batchsize;
