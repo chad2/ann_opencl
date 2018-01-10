@@ -1,4 +1,5 @@
 #include "Ann.h"
+#include <unistd.h>
 
 
 Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_layer_neurons, int second_layer_neurons,
@@ -29,6 +30,9 @@ void Ann::free_mat(float **toFree) {
 
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
     #if USE_OPEN_CL == 0
+        float** b_transp = create_mat(w, hw);
+        transp_mat(b, b_transp, hw, w);
+
         for(int i=0; i < h; i++) {
             for(int j=0; j < w; j++) {
                 c[i][j] = 0;
@@ -41,13 +45,16 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
                     for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
                         float sum = 0;
                         for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
-                            sum += a[i][k] * b[k][j];
+                            sum += a[i][k] * b_transp[j][k];
                         }
                         c[i][j] += sum;
                     }
                 }
             }
         }
+        free_mat(b_transp);
+        b_transp = nullptr;
+
     #elif USE_OPEN_CL == 1
         clm->cl_mul_mat(*b, *a, *c, hw, w, h);
     #endif
