@@ -53,24 +53,10 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
         }
         free_mat(b_transp);
         b_transp = nullptr;
-
+        
     #elif USE_OPEN_CL == 1
         clm.cl_mul_mat(*b, *a, *c, hw, w, h);
     #endif
-
-    for(int i=0;i<h;i++){
-        for(int j=0;j<w;j++){
-            float sum = 0;
-            for(int k=0;k<hw;k++){
-                sum += a[i][k] * b[k][j];
-            }
-            if((std::max(sum, c[i][j]) - std::min(sum, c[i][j])) > 0.01) {
-                std::cout << sum << " != " << c[i][j] << std::endl;
-                throw;
-            }
-            //c[i][j] = sum;
-        }
-    }
 }
 
 void Ann::transp_mat(float **in, float **res, int h, int w) {

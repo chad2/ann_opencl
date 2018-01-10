@@ -8,7 +8,6 @@
 clMul::clMul(const char *path) {
     cl_uint count = 0;
     char **kernelstring = clMul::readCode(path, count);
-
                 
     cl_platform_id platform = 0;
     clGetPlatformIDs(1, &platform, NULL);
@@ -53,7 +52,7 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clEnqueueWriteBuffer(queue, bufB, CL_TRUE, 0, K*N*sizeof(float), B, 0, NULL, NULL);
     clEnqueueWriteBuffer(queue, bufC, CL_TRUE, 0, M*N*sizeof(float), C, 0, NULL, NULL);
     // Configure the myGEMM kernel and set its arguments
-    cl_kernel kernel = clCreateKernel(program, "myGEMM1", NULL);
+    cl_kernel kernel = clCreateKernel(program, "myGEMM4", NULL);
     clSetKernelArg(kernel, 0, sizeof(int), (void*)&M);
     clSetKernelArg(kernel, 1, sizeof(int), (void*)&N);
     clSetKernelArg(kernel, 2, sizeof(int), (void*)&K);
@@ -61,8 +60,11 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clSetKernelArg(kernel, 4, sizeof(cl_mem), (void*)&bufB);
     clSetKernelArg(kernel, 5, sizeof(cl_mem), (void*)&bufC);
 
-    const size_t local[2] = { TS, TS };
-    const size_t global[2] = { M, N };
+    //const size_t local[2] = { TS, TS };
+    //const size_t global[2] = { M, N };
+
+    const size_t local[2] = { TS/WIDTH, TS };
+    const size_t global[2] = { (size_t)(M/WIDTH), (size_t)N };
     clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global, local, 0, NULL, &event);
 
     // Wait for calculations to be finished

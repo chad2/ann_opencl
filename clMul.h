@@ -1,6 +1,7 @@
 #ifndef UNTITLED3_CLMUL_H
 #define UNTITLED3_CLMUL_H
-#define TS 1
+#define TS 2
+#define WIDTH 1
 #include <CL/cl.h>
 #include <iostream>
 
