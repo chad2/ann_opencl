@@ -1,21 +1,14 @@
 // adapted from https://github.com/cnugteren/myGEMM
 
 #include "clMul.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <memory>
 
-clMul::clMul() {
-    const char *kernelstring =
-        "__kernel void myGEMM1(const int M, const int N, const int K,"
-                "                      const __global float* A,"
-                "                      const __global float* B,"
-                "                      __global float* C) {"
-                "    const int globalRow = get_global_id(0);"
-                "    const int globalCol = get_global_id(1);"
-                "    float acc = 0.0f;"
-                "    for (int k=0; k<K; k++) {"
-                "        acc += A[k*M + globalRow] * B[globalCol*K + k];"
-                "    }"
-                "    C[globalCol*M + globalRow] = acc;"
-                "}";
+clMul::clMul(const char *path) {
+    cl_uint count = 0;
+    char **kernelstring = clMul::readCode(path, count);
+
                 
     cl_platform_id platform = 0;
     clGetPlatformIDs(1, &platform, NULL);
@@ -27,7 +20,7 @@ clMul::clMul() {
     clGetDeviceInfo(device, CL_DEVICE_NAME, 1024, deviceName, NULL);
 
     // Compile the kernel
-    program = clCreateProgramWithSource(context, 1, &kernelstring, NULL, NULL);
+    program = clCreateProgramWithSource(context, 1, (const char **)kernelstring, NULL, NULL);
     clBuildProgram(program, 0, NULL, "", NULL, NULL);
 
     // Check for compilation errors
@@ -38,6 +31,16 @@ clMul::clMul() {
     messages[logSize] = '\0';
     if (logSize > 10) { printf(">>> Compiler message: %s\n", messages); }
     free(messages);
+
+    clMul::freeCode(kernelstring, count);
+    kernelstring = nullptr;
+}
+
+clMul::~clMul() {
+    // Clean-up OpenCL
+    clReleaseCommandQueue(queue);
+    clReleaseContext(context);
+    clReleaseProgram(program);
 }
 
 void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
@@ -74,9 +77,51 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clReleaseKernel(kernel);
 }
 
-clMul::~clMul() {
-    // Clean-up OpenCL
-    clReleaseCommandQueue(queue);
-    clReleaseContext(context);
-    clReleaseProgram(program);
+void clMul::freeCode(char **code, const size_t length) {
+	if(code == NULL || length < 0) {
+		fprintf(stderr, "ERROR: %s - argument is NULL", __FUNCTION__);
+		return;
+	}
+	
+	for(size_t i=0; i < length; i++) {
+		delete[] code[i];
+		code[i] = NULL;
+	}
+	delete[] code;
+	code = NULL;	
+}
+
+char ** clMul::readCode(const char *path, cl_uint& count) {
+	if(path == NULL) {
+		fprintf(stderr, "ERROR: %s - argument is NULL\n", __FUNCTION__);
+		return NULL;
+	}
+	
+	char **result = NULL;
+	std::unique_ptr<FILE, decltype(&fclose)> fp(fopen(path, "r"), &fclose);
+	long lSize = 0;
+	count = 0;
+	
+	if(!fp) {
+		fprintf(stderr, "ERROR: %s - failed to open file %s\n", __FUNCTION__, path);
+		return result;
+	}
+	fseek(fp.get(), 0L, SEEK_END);
+	lSize = ftell(fp.get());
+	rewind(fp.get());
+	
+	result = new char*[1];
+	count = 1;
+	result[0] = new char[(lSize+1) * sizeof(char)];
+	result[0][lSize] = '\0';
+	
+	if(1 != fread(result[0], lSize, sizeof(char), fp.get())) {
+		fprintf(stderr, "ERROR: %s - fread failed\n", __FUNCTION__);
+		freeCode(result, count);
+		count = 0;
+		return NULL;
+	}
+	
+	
+	return result;
 }

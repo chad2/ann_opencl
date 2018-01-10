@@ -6,11 +6,14 @@
 
 class clMul {
 public:
-    clMul();
+    clMul(const char *path = "kernel.cl");
     virtual ~clMul();
     void cl_mul_mat(float* A, float* B, float* C, int K, int M, int N);
 
 private:
+    static char ** readCode(const char *path, cl_uint& count);
+    static void freeCode(char **code, const size_t length);
+
     cl_context context;
     cl_command_queue queue;
     cl_program program;
