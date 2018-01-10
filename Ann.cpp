@@ -6,7 +6,6 @@ Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_la
          int epochs, Activation act) : train_size(train_size), test_size(test_size), batchsize(batchsize), classes(classes),
                        first_layer_neurons(first_layer_neurons), second_layer_neurons(second_layer_neurons),
                        epochs(epochs), act(act) {
-    clm = new clMul();
 }
 
 
@@ -56,8 +55,22 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
         b_transp = nullptr;
 
     #elif USE_OPEN_CL == 1
-        clm->cl_mul_mat(*b, *a, *c, hw, w, h);
+        clm.cl_mul_mat(*b, *a, *c, hw, w, h);
     #endif
+
+    for(int i=0;i<h;i++){
+        for(int j=0;j<w;j++){
+            float sum = 0;
+            for(int k=0;k<hw;k++){
+                sum += a[i][k] * b[k][j];
+            }
+            if((std::max(sum, c[i][j]) - std::min(sum, c[i][j])) > 0.01) {
+                std::cout << sum << " != " << c[i][j] << std::endl;
+                throw;
+            }
+            //c[i][j] = sum;
+        }
+    }
 }
 
 void Ann::transp_mat(float **in, float **res, int h, int w) {
@@ -304,7 +317,6 @@ float Ann::calc_acc(bool training, int step) {
 }
 
 Ann::~Ann() {
-    delete clm;
     free_mat(x);
     free_mat(w1);
     free_mat(b1);

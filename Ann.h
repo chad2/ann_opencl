@@ -40,7 +40,7 @@ private:
     imageLabel* train_data;
     imageLabel* test_data;
     Activation act;
-    clMul* clm;
+    clMul clm;
 
     float** x;      // input matrix
 
