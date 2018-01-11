@@ -28,7 +28,11 @@ clMul::clMul(const char *path) {
     // Compile the kernel
     program = clCreateProgramWithSource(context, 1, (const char **)kernelstring, NULL, &err);
     checkError(err, __LINE__);
-    err = clBuildProgram(program, 0, NULL, "", NULL, NULL);
+
+    //Build kernel with defined options
+    char compilerOptions[] = "-DTS=2 -DWIDTH=2";
+    sprintf(compilerOptions, "-DTS=%d -DWIDTH=%d", TS, WIDTH);
+    err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
     checkError(err, __LINE__);
 
     // Check for compilation errors
