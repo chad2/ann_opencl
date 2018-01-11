@@ -10,6 +10,9 @@ public:
     clMul(const char *path = "kernel.cl");
     virtual ~clMul();
     void cl_mul_mat(float* A, float* B, float* C, int K, int M, int N);
+    
+    static const char *getOpenCLError(cl_int error);
+    static void checkError(cl_int error, const size_t &line);
 
 private:
     static char ** readCode(const char *path, cl_uint& count);
