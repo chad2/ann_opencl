@@ -30,8 +30,9 @@ clMul::clMul(const char *path) {
     checkError(err, __LINE__);
 
     //Build kernel with defined options
-    char compilerOptions[] = "-DTS=2 -DWIDTH=2";
-    sprintf(compilerOptions, "-DTS=%d -DWIDTH=%d", TS, WIDTH);
+    char compilerOptions[30] = "-DTS=2 -DWIDTH=2";
+    snprintf(compilerOptions, 30, "-DTS=%d -DWIDTH=%d", TS, WIDTH);
+    compilerOptions[29] = '\0';
     err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
     checkError(err, __LINE__);
 
