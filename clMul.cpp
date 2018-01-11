@@ -33,10 +33,13 @@ clMul::clMul(const char *path) {
 
     clMul::freeCode(kernelstring, count);
     kernelstring = nullptr;
+
+    kernel = clCreateKernel(program, "myGEMM4", NULL);
 }
 
 clMul::~clMul() {
     // Clean-up OpenCL
+    clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
     clReleaseContext(context);
     clReleaseProgram(program);
@@ -51,8 +54,7 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clEnqueueWriteBuffer(queue, bufA, CL_TRUE, 0, M*K*sizeof(float), A, 0, NULL, NULL);
     clEnqueueWriteBuffer(queue, bufB, CL_TRUE, 0, K*N*sizeof(float), B, 0, NULL, NULL);
     clEnqueueWriteBuffer(queue, bufC, CL_TRUE, 0, M*N*sizeof(float), C, 0, NULL, NULL);
-    // Configure the myGEMM kernel and set its arguments
-    cl_kernel kernel = clCreateKernel(program, "myGEMM4", NULL);
+    // Configure the kernel and set its arguments
     clSetKernelArg(kernel, 0, sizeof(int), (void*)&M);
     clSetKernelArg(kernel, 1, sizeof(int), (void*)&N);
     clSetKernelArg(kernel, 2, sizeof(int), (void*)&K);
@@ -76,7 +78,6 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clReleaseMemObject(bufA);
     clReleaseMemObject(bufB);
     clReleaseMemObject(bufC);
-    clReleaseKernel(kernel);
 }
 
 void clMul::freeCode(char **code, const size_t length) {

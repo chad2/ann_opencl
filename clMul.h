@@ -15,6 +15,7 @@ private:
     static char ** readCode(const char *path, cl_uint& count);
     static void freeCode(char **code, const size_t length);
 
+    cl_kernel kernel;
     cl_context context;
     cl_command_queue queue;
     cl_program program;
