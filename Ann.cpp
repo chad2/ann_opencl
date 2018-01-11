@@ -103,6 +103,21 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
         free_mat(C_pad);
         C_pad = nullptr;
     #endif
+
+    #ifdef DEBUG
+    for(int i=0;i<h;i++){
+        for(int j=0;j<w;j++){
+            float sum = 0;
+            for(int k=0;k<hw;k++){
+                sum += a[i][k] * b[k][j];
+            }
+            if((std::max(sum, c[i][j]) - std::min(sum, c[i][j])) > 0.01) {
+                std::cout << "i,j:" << i << "," << j << " " << sum << " != " << c[i][j] << std::endl;
+                throw;
+            }
+        }
+    }
+    #endif
 }
 
 void Ann::transp_mat(float **in, float **res, int h, int w) {
