@@ -55,7 +55,53 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
         b_transp = nullptr;
         
     #elif USE_OPEN_CL == 1
-        clm.cl_mul_mat(*b, *a, *c, hw, w, h);
+        #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
+
+        size_t TS = this->clm.getWorkGroupSize();
+        const int hw_pad = CEIL_DIV(hw, TS) * TS;
+        const int w_pad = CEIL_DIV(w, TS) * TS;
+        const int h_pad = CEIL_DIV(h, TS) * TS;
+
+        float **A_pad = create_mat(h_pad, hw_pad);
+        for(int i=0; i < h_pad; i++) {
+            for(int j=0; j < hw_pad; j++) {
+                A_pad[i][j] = 0;
+            }
+        }
+        for(int i=0; i < h; i++) {
+            for(int j=0; j < hw; j++) {
+                A_pad[i][j] = a[i][j];
+            }
+        }
+
+        float **B_pad = create_mat(hw_pad, w_pad);
+        for(int i=0; i < hw_pad; i++) {
+            for(int j=0; j < w_pad; j++) {
+                B_pad[i][j] = 0;
+            }
+        }
+        for(int i=0; i < hw; i++) {
+            for(int j=0; j < w; j++) {
+                B_pad[i][j] = b[i][j];
+            }
+        }
+
+        float **C_pad = create_mat(h_pad, w_pad);
+
+        clm.cl_mul_mat(*B_pad, *A_pad, *C_pad, hw_pad, w_pad, h_pad);
+
+        for(int i=0; i < h; i++) {
+            for(int j=0; j < w; j++) {
+                c[i][j] = C_pad[i][j];
+            }
+        }
+
+        free_mat(A_pad);
+        A_pad = nullptr;
+        free_mat(B_pad);
+        B_pad = nullptr;
+        free_mat(C_pad);
+        C_pad = nullptr;
     #endif
 }
 

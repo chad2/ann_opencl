@@ -30,8 +30,9 @@ clMul::clMul(const char *path) {
     checkError(err, __LINE__);
 
     //Build kernel with defined options
-    char compilerOptions[] = "-DTS=2 -DWIDTH=2";
-    sprintf(compilerOptions, "-DTS=%d -DWIDTH=%d", TS, WIDTH);
+    char compilerOptions[30] = {'\0'};
+    snprintf(compilerOptions, 30, "-DTS=%d -DWIDTH=%d", this->wotkGroupSize, WIDTH);
+    compilerOptions[29] = '\0';
     err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
     checkError(err, __LINE__);
 
@@ -46,11 +47,28 @@ clMul::clMul(const char *path) {
     if (logSize > 10) { printf(">>> Compiler message: %s\n", messages); }
     free(messages);
 
-    clMul::freeCode(kernelstring, count);
-    kernelstring = nullptr;
+    kernel = clCreateKernel(program, "myGEMM4", &err);
+    checkError(err, __LINE__);
+
+    this->wotkGroupSize = clMul::getWorkGroupSize();
+
+    clReleaseKernel(kernel);
+    clReleaseProgram(program);
+
+    //now we do have the preffered work group size and provide it as parameter for compilation
+    program = clCreateProgramWithSource(context, 1, (const char **)kernelstring, NULL, &err);
+    checkError(err, __LINE__);
+
+    snprintf(compilerOptions, 30, "-DTS=%d -DWIDTH=%d", this->wotkGroupSize, WIDTH);
+    compilerOptions[29] = '\0';
+    err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
+    checkError(err, __LINE__);
 
     kernel = clCreateKernel(program, "myGEMM4", &err);
     checkError(err, __LINE__);
+
+    clMul::freeCode(kernelstring, count);
+    kernelstring = nullptr;
 }
 
 clMul::~clMul() {
@@ -94,10 +112,10 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     err = clSetKernelArg(kernel, 5, sizeof(cl_mem), (void*)&bufC);
     checkError(err, __LINE__);
 
-    //const size_t local[2] = { TS, TS };
+    //const size_t local[2] = { this->wotkGroupSize, this->wotkGroupSize };
     //const size_t global[2] = { M, N };
 
-    const size_t local[2] = { TS/WIDTH, TS };
+    const size_t local[2] = { this->wotkGroupSize/WIDTH, this->wotkGroupSize };
     const size_t global[2] = { (size_t)(M/WIDTH), (size_t)N };
     err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global, local, 0, NULL, &event);
     checkError(err, __LINE__);
@@ -114,6 +132,28 @@ void clMul::cl_mul_mat(float* A, float* B, float* C, int K, int M, int N) {
     clReleaseMemObject(bufA);
     clReleaseMemObject(bufB);
     clReleaseMemObject(bufC);
+}
+
+size_t clMul::getWorkGroupSize() {
+    cl_int err = CL_SUCCESS;
+
+    size_t work_group_size = 0;
+    cl_platform_id platforms[100];
+    cl_uint platforms_n;
+    cl_device_id devices[100];
+    cl_uint devices_n;
+
+    err = clGetPlatformIDs(100,platforms, &platforms_n);  
+    checkError(err, __LINE__);
+
+    err = clGetDeviceIDs( platforms[0], CL_DEVICE_TYPE_GPU, 100, devices, 
+                &devices_n);
+    checkError(err, __LINE__);
+
+    err = clGetKernelWorkGroupInfo(kernel, devices[0], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), &work_group_size, NULL);
+    checkError(err, __LINE__);
+
+    return work_group_size;
 }
 
 void clMul::checkError(cl_int error, const size_t &line) {

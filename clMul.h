@@ -1,6 +1,5 @@
 #ifndef UNTITLED3_CLMUL_H
 #define UNTITLED3_CLMUL_H
-#define TS 2
 #define WIDTH 1
 #include <CL/cl.h>
 #include <iostream>
@@ -10,6 +9,7 @@ public:
     clMul(const char *path = "kernel.cl");
     virtual ~clMul();
     void cl_mul_mat(float* A, float* B, float* C, int K, int M, int N);
+    size_t getWorkGroupSize();
     
     static const char *getOpenCLError(cl_int error);
     static void checkError(cl_int error, const size_t &line);
@@ -18,6 +18,7 @@ private:
     static char ** readCode(const char *path, cl_uint& count);
     static void freeCode(char **code, const size_t length);
 
+    size_t wotkGroupSize = 1;
     cl_kernel kernel;
     cl_context context;
     cl_command_queue queue;
