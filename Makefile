@@ -22,7 +22,7 @@ LFLAGS += -lm
 
 ifeq ($(OS),Windows_NT)
 	CPPFLAGS += -I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include"
-	LFLAGS += -L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64"
+	LFLAGS += -L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" -lOpenCL
 else
 	LFLAGS += -lOpenCL
 endif
