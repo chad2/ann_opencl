@@ -1,5 +1,4 @@
 #include "Ann.h"
-#include <unistd.h>
 
 
 Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_layer_neurons, int second_layer_neurons,
@@ -342,7 +341,7 @@ void Ann::update_params(float learning_rate) {
     update_param(b2, d_b2, learning_rate, 1, second_layer_neurons);
 }
 
-float Ann::calc_acc(bool training, int step) {
+float Ann::calc_acc(bool training, int step, bool visual) {
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
     int offset = step*batchsize;
@@ -350,7 +349,7 @@ float Ann::calc_acc(bool training, int step) {
     int correct = 0;
     for(int i=0; i<batchsize; i++){
         int max_index = 0;
-        for(int j=0; j<10; j++){
+        for(int j=0; j<classes; j++){
             if(probs[i][j]>probs[i][max_index]){ // find class with highest probability
                 max_index = j;
             }
@@ -360,8 +359,19 @@ float Ann::calc_acc(bool training, int step) {
         }
     }
     acc = (float)correct/batchsize;
+    if(visual){
+        for(int i=0; i<batchsize; i++){
+            std::cout << "L: " << +data[(i+offset)%data_size].label << ";  ";
+            for(int j=0; j<classes; j++){
+                std::cout << j << ": " << std::setprecision(3) << std::fixed << probs[i][j] << "  ";
+            }
+            imageLabel::print(&data[(i+offset)%data_size]);
+            std::cout << std::endl;
+        }
+    }
     return acc;
 }
+
 
 Ann::~Ann() {
     free_mat(x);

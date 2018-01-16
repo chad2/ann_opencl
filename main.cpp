@@ -6,11 +6,11 @@
 
 const int TRN_SIZE = 60000;
 const int TST_SIZE = 10000;
-const int BATCH_SIZE = 100;
+const int BATCH_SIZE = 32;
 const int CLASSES = 10;
-const int FL_NEURONS = 300;
+const int FL_NEURONS = 20;
 const int SL_NEURONS = CLASSES;
-const int EPOCHS = 5;
+const int EPOCHS = 3;
 const float LEARNING_RATE = 0.01;
 const float DECAY_RATE = 0.0001;
 
@@ -32,12 +32,14 @@ int main() {
             learning_rate *= (1.0 / (1.0 + DECAY_RATE * step));
             int rand_index = rand() % TST_SIZE;  // test on random sample of test_data
             ann.forward_pass(false, rand_index);
-            tst_acc = ann.calc_acc(false, rand_index);
+            tst_acc = ann.calc_acc(false, rand_index, false);
             std::cout << "step: " << std::setw(5) << step <<"/" << (TRN_SIZE/BATCH_SIZE)*EPOCHS;
             std::cout << " trn_loss: " << std::setw(9) << trn_loss;
             std::cout << " tst_acc: " << std::setw(4) << tst_acc;
             std::cout << " learning_rate: " << std::setw(9) << learning_rate << std::endl;
         }
     }
+    ann.forward_pass(false, 0);
+    ann.calc_acc(false, 0, true);
     return 0;
 }

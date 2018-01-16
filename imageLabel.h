@@ -1,13 +1,15 @@
 #ifndef UNTITLED3_IMAGELABEL_H
 #define UNTITLED3_IMAGELABEL_H
+#include <iostream>
 
 const int IMAGE_SIZE = 28;
 
-struct imageLabel {
+class imageLabel {
+public:
     unsigned char label;
     unsigned char pixel[IMAGE_SIZE][IMAGE_SIZE];
 
-    void print_imageLabel(imageLabel* il);
+	static void print(imageLabel* il);
 };
 
 

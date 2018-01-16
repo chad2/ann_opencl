@@ -10,6 +10,8 @@
 #include <math.h>
 #include <limits>
 #include "clMul.h"
+#include <unistd.h>
+#include <iomanip>
 
 class Ann {
 public:
@@ -26,7 +28,7 @@ public:
     float forward_pass(bool training, int step);        // returns loss
     void backprop(bool training, int step);
     void update_params(float learning_rate);
-    float calc_acc(bool training, int step);
+    float calc_acc(bool training, int step, bool visual);
 
 private:
     const int BlockSize = 16;
