@@ -8,7 +8,7 @@ from keras.optimizers import SGD
 
 TRN_SIZE = 60000
 TST_SIZE = 10000
-BATCH_SIZE = 100
+BATCH_SIZE = 128
 CLASSES = 10
 EPOCHS = 5
 IMAGE_SIZE = 28
@@ -28,7 +28,7 @@ tst_images /= 255
 
 ru = RandomUniform(minval=-0.1, maxval=0.1, seed=None)
 model = Sequential()
-model.add(Dense(300, input_shape=(IMAGE_SIZE**2,),
+model.add(Dense(256, input_shape=(IMAGE_SIZE**2,),
                 kernel_initializer=ru, bias_initializer=ru))
 model.add(Activation("relu"))
 model.add(Dense(CLASSES))

@@ -1,5 +1,5 @@
-#ifndef UNTITLED3_READER_H
-#define UNTITLED3_READER_H
+#ifndef READER_H
+#define READER_H
 
 #include "imageLabel.h"
 #include <fstream>
@@ -12,4 +12,4 @@ public:
 };
 
 
-#endif //UNTITLED3_READER_H
+#endif //READER_H

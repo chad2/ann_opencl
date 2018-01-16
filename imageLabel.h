@@ -1,5 +1,5 @@
-#ifndef UNTITLED3_IMAGELABEL_H
-#define UNTITLED3_IMAGELABEL_H
+#ifndef IMAGELABEL_H
+#define IMAGELABEL_H
 #include <iostream>
 
 const int IMAGE_SIZE = 28;
@@ -13,4 +13,4 @@ public:
 };
 
 
-#endif //UNTITLED3_IMAGELABEL_H
+#endif //IMAGELABEL_H

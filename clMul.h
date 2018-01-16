@@ -1,5 +1,5 @@
-#ifndef UNTITLED3_CLMUL_H
-#define UNTITLED3_CLMUL_H
+#ifndef CLMUL_H
+#define CLMUL_H
 #define WIDTH 1
 #include <CL/cl.h>
 #include <iostream>
@@ -27,4 +27,4 @@ private:
 };
 
 
-#endif //UNTITLED3_CLMUL_H
+#endif //CLMUL_H

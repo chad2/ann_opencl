@@ -1,5 +1,5 @@
-#ifndef UNTITLED3_ANN_H
-#define UNTITLED3_ANN_H
+#ifndef ANN_H
+#define ANN_H
 
 #define USE_OPEN_CL 1
 
@@ -88,4 +88,4 @@ private:
 };
 
 
-#endif //UNTITLED3_ANN_H
+#endif //ANN_H

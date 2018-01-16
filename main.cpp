@@ -6,11 +6,11 @@
 
 const int TRN_SIZE = 60000;
 const int TST_SIZE = 10000;
-const int BATCH_SIZE = 32;
+const int BATCH_SIZE = 128;
 const int CLASSES = 10;
-const int FL_NEURONS = 20;
+const int FL_NEURONS = 256;
 const int SL_NEURONS = CLASSES;
-const int EPOCHS = 3;
+const int EPOCHS = 5;
 const float LEARNING_RATE = 0.01;
 const float DECAY_RATE = 0.0001;
 
@@ -39,7 +39,6 @@ int main() {
             std::cout << " learning_rate: " << std::setw(9) << learning_rate << std::endl;
         }
     }
-    ann.forward_pass(false, 0);
     ann.calc_acc(false, 0, true);
     return 0;
 }

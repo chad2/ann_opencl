@@ -341,6 +341,7 @@ void Ann::update_params(float learning_rate) {
     update_param(b2, d_b2, learning_rate, 1, second_layer_neurons);
 }
 
+
 float Ann::calc_acc(bool training, int step, bool visual) {
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
@@ -359,8 +360,9 @@ float Ann::calc_acc(bool training, int step, bool visual) {
         }
     }
     acc = (float)correct/batchsize;
-    if(visual){
-        for(int i=0; i<batchsize; i++){
+    if(visual){   // visualize tested examples
+        forward_pass(false, 0);  // starting test sample from index 0
+        for(int i=0; i<10 && i<batchsize; i++){
             std::cout << "L: " << +data[(i+offset)%data_size].label << ";  ";
             for(int j=0; j<classes; j++){
                 std::cout << j << ": " << std::setprecision(3) << std::fixed << probs[i][j] << "  ";

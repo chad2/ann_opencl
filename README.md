@@ -1,9 +1,9 @@
 # ann_opencl
 
 ## runtime
-i5 3570k, GTX 1060, FL_NEURONS = 300, BATCHSIZE = 100
-* .\main.exe :          28.9 seconds
-* py .\mnist_keras.py :  20.1 seconds
+i5 3570k, GTX 1060, FL_NEURONS = 256, BATCHSIZE = 128, EPOCHS = 5
+* .\main.exe :          23.5 seconds
+* py .\mnist_keras.py :  12.79 seconds
 
 
 ## References
