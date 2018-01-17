@@ -8,7 +8,12 @@ Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_la
 }
 
 
-
+/**
+ *
+ * @param h Height of created matrix.
+ * @param w Width of created matrix.
+ * @return Matrix with size h x w.
+ */
 float **Ann::create_mat(int h, int w) {
     float** ptr = new float*[h]; 		// pointer
     float* pool = new float[h*w];		// mempool
@@ -18,6 +23,10 @@ float **Ann::create_mat(int h, int w) {
     return ptr;
 }
 
+/**
+ *
+ * @param toFree Matrix to be freed.
+ */
 void Ann::free_mat(float **toFree) {
     if(toFree == nullptr) {
         return;
@@ -26,6 +35,15 @@ void Ann::free_mat(float **toFree) {
     delete[] toFree;
 }
 
+/**
+ *
+ * @param a
+ * @param b
+ * @param c Result of a*b, with size h x w.
+ * @param h Height of matrix a.
+ * @param hw Width of matrix a, height of matrix b.
+ * @param w Width of matrix b
+ */
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
     #if USE_OPEN_CL == 0
         float** b_transp = create_mat(w, hw);
@@ -118,7 +136,13 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
     }
     #endif
 }
-
+/**
+ *
+ * @param in
+ * @param res Result of transposed matrix in.
+ * @param h Height of matrix in.
+ * @param w Width of matrix in.
+ */
 void Ann::transp_mat(float **in, float **res, int h, int w) {
     for(int i=0;i<h;i++){
         for(int j=0;j<w;j++){
@@ -127,6 +151,14 @@ void Ann::transp_mat(float **in, float **res, int h, int w) {
     }
 }
 
+/**
+ *
+ * @param x Neural network input matrix.
+ * @param il Dataset to be filled into matrix x. (test/train)
+ * @param amount Amount of datapoints loaded into x. (amount <= batchsize)
+ * @param offset Loaded date from il is offseted by offset.
+ * @param data_size Size of dataset given in il.
+ */
 void Ann::load_input(float **x, imageLabel *il, int amount, int offset, int data_size) {
     for(int i=0; i<amount; i++){
         for(int j=0; j<IMAGE_SIZE*IMAGE_SIZE; j++){
@@ -136,6 +168,14 @@ void Ann::load_input(float **x, imageLabel *il, int amount, int offset, int data
     }
 }
 
+/**
+ *
+ * @param mat Matrix to be initialized with random values.
+ * @param h Height of matrix mat.
+ * @param w Width of matrix mat.
+ * @param min Minimum of generated values.
+ * @param max Maximum of generated values.
+ */
 void Ann::init_rand(float **mat, int h, int w, float min, float max) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -144,6 +184,14 @@ void Ann::init_rand(float **mat, int h, int w, float min, float max) {
     }
 }
 
+/**
+ *
+ * @param mat
+ * @param bias Biasvector with size 1 x h.
+ * @param res Result of mat + bias. (broadcasted add)
+ * @param h Height of matrix mat.
+ * @param w Width of matrix mat.
+ */
 void Ann::broadcasted_add(float **mat, float **bias, float **res, int h, int w) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -152,6 +200,13 @@ void Ann::broadcasted_add(float **mat, float **bias, float **res, int h, int w) 
     }
 }
 
+/**
+ *
+ * @param in Matrix to be passed through activation function.
+ * @param res Result of act(in). Act being a previously chosen activation function.
+ * @param h Height of matrix in.
+ * @param w Width of matrix in.
+ */
 void Ann::act_mat(float **in, float **res, int h, int w) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -165,6 +220,13 @@ void Ann::act_mat(float **in, float **res, int h, int w) {
     }
 }
 
+/**
+ *
+ * @param in Matrix containing raw outputs from NN.
+ * @param res Result of elementwise exp(in).
+ * @param h Height of matrix in.
+ * @param w Width of matrix in.
+ */
 void Ann::exp_mat(float **in, float **res, int h, int w) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -176,6 +238,13 @@ void Ann::exp_mat(float **in, float **res, int h, int w) {
     }
 }
 
+/**
+ *
+ * @param in Matrix containing exponated outputs from the NN.
+ * @param res Matrix containing probabilities of classes for every datasample.
+ * @param h Height of matrix in.
+ * @param w Width of matrix in.
+ */
 void Ann::softmax_mat(float **in, float **res, int h, int w) {
     for(int i=0; i<h; i++){
         float sum = 0;
@@ -188,6 +257,16 @@ void Ann::softmax_mat(float **in, float **res, int h, int w) {
     }
 }
 
+/**
+ *
+ * @param il imageLabel data used to compute probs in matrix a.
+ * @param a Matrix filled with probabilities for datasamples.
+ * @param h Height of matrix a.
+ * @param w Width of matrix b.
+ * @param train_step Current iterationstep.
+ * @param data_size Size of datastrucure given in il.
+ * @return Network loss.
+ */
 float Ann::ce_loss(imageLabel *il, float **a, int h, int w, int train_step, int data_size) {
     float sum = 0;
     float val;
@@ -202,7 +281,16 @@ float Ann::ce_loss(imageLabel *il, float **a, int h, int w, int train_step, int 
     }
     return sum;
 }
-
+/**
+ *
+ * @param il ImageLabel data used in forwardpass.
+ * @param in Matrix containing probabilities.
+ * @param res Gradient on raw score output from NN.
+ * @param h Height of matrix in.
+ * @param w Width of matrix in.
+ * @param train_step Current iterationstep.
+ * @param data_size Size of data given in il.
+ */
 void Ann::bp_ce_softmax(imageLabel *il, float **in, float **res, int h, int w, int train_step, int data_size) {
     int il_index;
     for(int i=0; i<h; i++){
@@ -217,7 +305,16 @@ void Ann::bp_ce_softmax(imageLabel *il, float **in, float **res, int h, int w, i
         }
     }
 }
-
+/**
+ *bp_w(r_a1, d_r_b2, d_w2, batchsize, first_layer_neurons, second_layer_neurons);
+ * x*w=r  dr/dw = xT*1 = r
+ * @param x Input from layer above.
+ * @param prev Gradient from previous backprop layer, sized h x w.
+ * @param res Resulting gradient on weightmatrix.
+ * @param hw Height of matrix x, height of matrix prev.
+ * @param h Width of matrix x.
+ * @param w Width of matrix prev.
+ */
 void Ann::bp_w(float **x, float **prev, float **res, int hw, int h, int w) {
     float** xT = create_mat(h, hw);
     transp_mat(x, xT, hw, h);
@@ -226,6 +323,15 @@ void Ann::bp_w(float **x, float **prev, float **res, int hw, int h, int w) {
     free_mat(xT);
 }
 
+/**
+ *
+ * @param w_
+ * @param prev
+ * @param res
+ * @param hw
+ * @param h
+ * @param w
+ */
 void Ann::bp_x(float **w_, float **prev, float **res, int hw, int h, int w) {
     float** wT = create_mat(hw, w);
     transp_mat(w_, wT, w, hw);
@@ -233,7 +339,13 @@ void Ann::bp_x(float **w_, float **prev, float **res, int hw, int h, int w) {
 
     free_mat(wT);
 }
-
+/**
+ *
+ * @param prev
+ * @param r
+ * @param h
+ * @param w
+ */
 void Ann::bp_b(float **prev, float **r, int h, int w) {
     float sum;
     for(int i=0; i<w; i++){
@@ -244,7 +356,14 @@ void Ann::bp_b(float **prev, float **r, int h, int w) {
         r[0][i] = sum;
     }
 }
-
+/**
+ *
+ * @param x
+ * @param prev
+ * @param res
+ * @param h
+ * @param w
+ */
 void Ann::bp_act(float **x, float **prev, float **res, int h, int w) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -257,7 +376,14 @@ void Ann::bp_act(float **x, float **prev, float **res, int h, int w) {
         }
     }
 }
-
+/**
+ *
+ * @param param
+ * @param d_param
+ * @param lr
+ * @param h
+ * @param w
+ */
 void Ann::update_param(float **param, float **d_param, float lr, int h, int w) {
     for(int i=0; i<h; i++){
         for(int j=0; j<w; j++){
@@ -265,13 +391,21 @@ void Ann::update_param(float **param, float **d_param, float lr, int h, int w) {
         }
     }
 }
-
+/**
+ *
+ * @param train_label_file
+ * @param train_image_file
+ * @param test_label_file
+ * @param test_image_file
+ */
 void Ann::init_data(std::string train_label_file, std::string train_image_file, std::string test_label_file,
                     std::string test_image_file) {
     train_data = Reader::load_data(train_size, train_label_file, train_image_file);
     test_data = Reader::load_data(test_size, test_label_file, test_image_file);
 }
-
+/**
+ *
+ */
 void Ann::init_mats() {
     x = create_mat(batchsize, IMAGE_SIZE*IMAGE_SIZE);
 
@@ -302,7 +436,12 @@ void Ann::init_mats() {
     init_rand(w2, first_layer_neurons, second_layer_neurons, -0.1, 0.1);
     init_rand(b2, 1, second_layer_neurons, -0.1, 0.1);
 }
-
+/**
+ *
+ * @param training
+ * @param step
+ * @return
+ */
 float Ann::forward_pass(bool training, int step) {
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
@@ -320,7 +459,11 @@ float Ann::forward_pass(bool training, int step) {
     float loss = ce_loss(data, probs, batchsize, classes, step, data_size) / (float) batchsize;
     return loss;
 }
-
+/**
+ *
+ * @param training
+ * @param step
+ */
 void Ann::backprop(bool training, int step) {
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
@@ -333,7 +476,10 @@ void Ann::backprop(bool training, int step) {
     bp_w(x, d_r_b1, d_w1, batchsize, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     bp_b(d_r_b1, d_b1, batchsize, first_layer_neurons);
 }
-
+/**
+ *
+ * @param learning_rate
+ */
 void Ann::update_params(float learning_rate) {
     update_param(w1, d_w1, learning_rate, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     update_param(b1, d_b1, learning_rate, 1, first_layer_neurons);
@@ -341,7 +487,13 @@ void Ann::update_params(float learning_rate) {
     update_param(b2, d_b2, learning_rate, 1, second_layer_neurons);
 }
 
-
+/**
+ *
+ * @param training
+ * @param step
+ * @param visual
+ * @return
+ */
 float Ann::calc_acc(bool training, int step, bool visual) {
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;

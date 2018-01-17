@@ -1,5 +1,11 @@
 #include "Reader.h"
-
+/**
+ *
+ * @param data_size
+ * @param label_file
+ * @param image_file
+ * @return
+ */
 imageLabel *Reader::load_data(int data_size, std::string label_file, std::string image_file) {
     imageLabel* data = new imageLabel[data_size];
     char buff;

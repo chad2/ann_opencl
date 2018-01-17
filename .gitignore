@@ -74,3 +74,13 @@ dkms.conf
 main
 *.idx3-ubyte
 *.idx1-ubyte
+*.html
+*.png
+*.css
+*.js
+*.tex
+*.sty
+latex/make.bat
+latex/Makefile
+.cproject
+.project

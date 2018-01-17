@@ -1,6 +1,9 @@
 #include "imageLabel.h"
 
-
+/**
+ *
+ * @param il
+ */
 void imageLabel::print(imageLabel *il) {
     std::cout << +il->label << std::endl;
     for(int r=0; r<IMAGE_SIZE; r++){
