@@ -7,7 +7,9 @@ using namespace std;
 #include <CL/cl.h>
 #include <string>
 
-#define KERNEL_MAIN	"kernel_main"
+#define KERNEL_FORWARD			"forward_pass"
+#define KERNEL_BACKPROP			"backprop"
+#define KERNEL_UPDATE_PARAMS	"update_params"
 
 class AnnOpenCL {
 public:
@@ -27,17 +29,21 @@ public:
 	);
 	virtual ~AnnOpenCL();
 
-	void runKernel(const bool training, const int step);
+	float forward_pass(const bool training, const int step);
+	void backprop(const bool training, const int step);
+	void update_params(const float learning_rate);
+	float calc_acc(const bool training, const int step, const bool visual);
 
 protected:
 	static string readKernel(const string path);
 	void prepareKernel();
 	void prepareData();
 	void setKernelArguments();
+	void load_input(float **x, const imageLabel *il, const int amount, const int offset, const int data_size);
+	void load_labels(int *label_target, const imageLabel *il, const int amount, const int offset, const int data_size);
 	static float **create_mat(const size_t h, const size_t w);
 	static void free_mat(float **toFree);
 	static void init_rand(float **mat, const size_t h, const size_t w, const float min, const float max);
-	static void load_input(float **x, const imageLabel *il, const int amount, const int offset, const int data_size);
 
 	const int train_size;
 	const int test_size;
@@ -53,10 +59,16 @@ protected:
 	const string test_label_file;
 	const string test_image_file;
 
+	float learning_rate = 0;
+
 	imageLabel* train_data;
 	imageLabel* test_data;
 
-	cl_kernel kernel;
+	cl_event event;
+
+	cl_kernel kernel_forward;
+	cl_kernel kernel_backprop;
+	cl_kernel kernel_update_params;
 	cl_context context;
 	cl_command_queue queue;
 	cl_program program;
@@ -86,6 +98,10 @@ protected:
 
 	cl_mem probs_cl;
 	float** probs_cpu;  // resulting probabilities
+
+	cl_mem labels;
+
+	cl_mem loss_cl;
 };
 
 #endif /* ANNOPENCL_H_ */

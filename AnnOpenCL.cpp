@@ -2,6 +2,7 @@
 #include "clMul.h"
 #include "Reader.h"
 #include <sstream>
+#include <iomanip>
 
 AnnOpenCL::AnnOpenCL(
 		const int train_size,
@@ -68,8 +69,12 @@ AnnOpenCL::~AnnOpenCL() {
 	clReleaseMemObject(d_r_b1);
 	clReleaseMemObject(d_w1);
 	clReleaseMemObject(d_b1);
+	clReleaseMemObject(labels);
+	clReleaseMemObject(loss_cl);
 
-	clReleaseKernel(kernel);
+	clReleaseKernel(kernel_forward);
+	clReleaseKernel(kernel_backprop);
+	clReleaseKernel(kernel_update_params);
 	clReleaseCommandQueue(queue);
 	clReleaseContext(context);
 	clReleaseProgram(program);
@@ -120,7 +125,13 @@ void AnnOpenCL::prepareKernel() {
 		cout << ">>> Compiler message: " << endl << messages << endl;
 	}
 
-	kernel = clCreateKernel(program, KERNEL_MAIN, &err);
+	kernel_forward = clCreateKernel(program, KERNEL_FORWARD, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop = clCreateKernel(program, KERNEL_BACKPROP, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_update_params = clCreateKernel(program, KERNEL_UPDATE_PARAMS, &err);
 	clMul::checkError(err, __LINE__);
 }
 
@@ -130,15 +141,15 @@ void AnnOpenCL::prepareData() {
 	size_t h=0, w=0;
 
 	h = batchsize;
-	w = IMAGE_SIZE*IMAGE_SIZE;
+	w = image_size*image_size;
 	x_cpu = create_mat(h, w);
-	x_cl = clCreateBuffer(context, CL_MEM_READ_WRITE, h*w*sizeof(float), NULL, &err);
+	x_cl = clCreateBuffer(context, CL_MEM_READ_ONLY, h*w*sizeof(float), NULL, &err);
 	clMul::checkError(err, __LINE__);
 
 	//--------------------------------------------------------------------------------
 
 	//set w1
-	h = IMAGE_SIZE*IMAGE_SIZE;
+	h = image_size*image_size;
 	w = first_layer_neurons;
 	temp = create_mat(h, w);
 	AnnOpenCL::init_rand(temp, h, w, -0.1, 0.1);
@@ -150,7 +161,7 @@ void AnnOpenCL::prepareData() {
 	temp = nullptr;
 
 	//set d_w1
-	h = IMAGE_SIZE*IMAGE_SIZE;
+	h = image_size*image_size;
 	w = first_layer_neurons;
 	d_w1 = clCreateBuffer(context, CL_MEM_READ_WRITE, h*w*sizeof(float), NULL, &err);
 	clMul::checkError(err, __LINE__);
@@ -288,131 +299,241 @@ void AnnOpenCL::prepareData() {
 	probs_cpu = create_mat(h, w);
 	probs_cl = clCreateBuffer(context, CL_MEM_READ_WRITE, h*w*sizeof(float), NULL, &err);
 	clMul::checkError(err, __LINE__);
+
+	//--------------------------------------------------------------------------------
+
+	h = batchsize;
+	labels = clCreateBuffer(context, CL_MEM_READ_ONLY, h*sizeof(int), NULL, &err);
+	clMul::checkError(err, __LINE__);
+
+	loss_cl = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(float), NULL, &err);
+	clMul::checkError(err, __LINE__);
 }
 
 void AnnOpenCL::setKernelArguments() {
 	cl_int err = CL_SUCCESS;
 	int arg_pos = 0;
 
-	// Configure the kernel and set its arguments
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&batchsize);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+	cl_kernel *kernel_arr[] = {&kernel_forward, &kernel_backprop, &kernel_update_params};
+	for(int i=0; i < 3; i++) {
+		arg_pos = 0;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&classes);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		// Configure the kernel and set its arguments
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&batchsize);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&first_layer_neurons);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&classes);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&second_layer_neurons);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&first_layer_neurons);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&epochs);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&second_layer_neurons);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(int), (void*)&image_size);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&epochs);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&x_cl);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(int), (void*)&image_size);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&w1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_w1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&r_w1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(float), (void*)&learning_rate);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&b1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_b1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&r_b1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_r_b1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&loss_cl);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&r_a1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_r_a1);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&x_cl);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&w2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_w2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&r_w2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&w1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_w1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&r_w1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&b2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_b2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&r_b2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&d_r_b2);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&b1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_b1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&r_b1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_r_b1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&er);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&r_a1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_r_a1);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
 
-	err = clSetKernelArg(kernel, arg_pos, sizeof(cl_mem), (void*)&probs_cl);
-	clMul::checkError(err, __LINE__);
-	arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&w2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_w2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&r_w2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&b2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_b2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&r_b2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&d_r_b2);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&er);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&probs_cl);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+
+		err = clSetKernelArg(*(kernel_arr[i]), arg_pos, sizeof(cl_mem), (void*)&labels);
+		clMul::checkError(err, __LINE__);
+		arg_pos++;
+	}
 }
 
-void AnnOpenCL::runKernel(const bool training, const int step) {
+float AnnOpenCL::forward_pass(const bool training, const int step) {
 	cl_int err = CL_SUCCESS;
-	const int &data_size = training ? train_size : test_size;
-	const imageLabel *data = training ? train_data : test_data;
+	const int data_size = training ? train_size : test_size;
+	const imageLabel* data = training ? train_data : test_data;
 	size_t h = 0, w = 0;
+	float loss = 0;
 
-
+	//write input to GPU buffer
 	h = batchsize;
-	w = IMAGE_SIZE*IMAGE_SIZE;
-	AnnOpenCL::load_input(x_cpu, data, batchsize, step * batchsize, data_size);
+	w = image_size*image_size;
+	load_input(x_cpu, data, batchsize, step * batchsize, data_size);
 	err = clEnqueueWriteBuffer(queue, x_cl, CL_TRUE, 0, h*w*sizeof(float), *x_cpu, 0, NULL, NULL);
 	clMul::checkError(err, __LINE__);
 
-	cl_event event;
-
-	const size_t local[] = {16};
-	const size_t global[] = {static_cast<size_t>(batchsize)};
-	clEnqueueNDRangeKernel(queue, kernel, 1, 0, global, local, 0, NULL, &event);
+	//--------------------------------------------------------------------------------
+	const size_t local_forward[] = {static_cast<size_t>(batchsize)};
+	const size_t global_forward[] = {static_cast<size_t>(batchsize)};
+	clEnqueueNDRangeKernel(queue, kernel_forward, 1, 0, global_forward, local_forward, 0, NULL, &event);
 
 	// Wait for calculations to be finished
 	err = clWaitForEvents(1, &event);
 	clMul::checkError(err, __LINE__);
 
-	// Copy the output probs matrix to CPU memory
-	h = batchsize;
-	w = classes;
-	err = clEnqueueReadBuffer(queue, probs_cl, CL_TRUE, 0, h*w*sizeof(float), *probs_cpu, 0, NULL, NULL);
+	//load loss from GPU
+	err = clEnqueueReadBuffer(queue, loss_cl, CL_TRUE, 0, sizeof(float), &loss, 0, NULL, NULL);
 	clMul::checkError(err, __LINE__);
+
+	return loss;
+}
+
+void AnnOpenCL::backprop(const bool training, const int step) {
+	cl_int err = CL_SUCCESS;
+	const int data_size = training ? train_size : test_size;
+	const imageLabel* data = training ? train_data : test_data;
+	size_t h = 0, w = 0;
+
+	//write label for training backpropagation to GPU buffer
+	w = batchsize;
+	int *temp_labels = new int[w];
+	load_labels(temp_labels, data, batchsize, step * batchsize, data_size);
+	err = clEnqueueWriteBuffer(queue, labels, CL_TRUE, 0, w*sizeof(int), temp_labels, 0, NULL, NULL);
+	delete[] temp_labels;
+	temp_labels = nullptr;
+	clMul::checkError(err, __LINE__);
+
+	//--------------------------------------------------------------------------------
+	const size_t local_backprop[] = {static_cast<size_t>(batchsize)};
+	const size_t global_backprop[] = {static_cast<size_t>(batchsize)};
+	clEnqueueNDRangeKernel(queue, kernel_backprop, 1, 0, global_backprop, local_backprop, 0, NULL, &event);
+
+	// Wait for calculations to be finished
+	err = clWaitForEvents(1, &event);
+	clMul::checkError(err, __LINE__);
+}
+
+void AnnOpenCL::update_params(const float learning_rate) {
+	cl_int err = CL_SUCCESS;
+
+	if(this->learning_rate != learning_rate) {
+		this->learning_rate = learning_rate;
+
+		const int arg_pos = 6;
+		err = clSetKernelArg(kernel_update_params, arg_pos, sizeof(float), (void*)&this->learning_rate);
+		clMul::checkError(err, __LINE__);
+	}
+
+	//--------------------------------------------------------------------------------
+	const size_t local_update[] = {1};
+	const size_t global_update[] = {1};
+	clEnqueueNDRangeKernel(queue, kernel_update_params, 1, 0, global_update, local_update, 0, NULL, &event);
+
+	// Wait for calculations to be finished
+	err = clWaitForEvents(1, &event);
+	clMul::checkError(err, __LINE__);
+}
+
+float AnnOpenCL::calc_acc(const bool training, const int step, const bool visual) {
+	const int data_size = training ? train_size : test_size;
+	imageLabel* data = training ? train_data : test_data;
+	const int offset = step*batchsize;
+	float acc;
+	int correct = 0;
+	cl_int err = CL_SUCCESS;
+
+	//load probs from GPU
+	err = clEnqueueReadBuffer(queue, probs_cl, CL_TRUE, 0, batchsize*classes*sizeof(float), *probs_cpu, 0, NULL, NULL);
+	clMul::checkError(err, __LINE__);
+
+	for(int i=0; i<batchsize; i++){
+		int max_index = 0;
+		for(int j=0; j<classes; j++){
+			if(probs_cpu[i][j]>probs_cpu[i][max_index]){ // find class with highest probability
+				max_index = j;
+			}
+		}
+		if(data[(i+offset)%data_size].label==max_index){    // compare to correct class
+			correct++;
+		}
+	}
+	acc = (float)correct/batchsize;
+	if(visual){   // visualize tested examples
+		forward_pass(false, 0);  // starting test sample from index 0
+		for(int i=0; i<10 && i<batchsize; i++){
+			std::cout << "L: " << +data[(i+offset)%data_size].label << ";  ";
+			for(int j=0; j<classes; j++){
+				std::cout << j << ": " << std::setprecision(3) << std::fixed << probs_cpu[i][j] << "  ";
+			}
+			imageLabel::print(&data[(i+offset)%data_size]);
+			std::cout << std::endl;
+		}
+	}
+	return acc;
 }
 
 float **AnnOpenCL::create_mat(const size_t h, const size_t w) {
@@ -442,9 +563,15 @@ void AnnOpenCL::init_rand(float **mat, const size_t h, const size_t w, const flo
 
 void AnnOpenCL::load_input(float **x, const imageLabel *il, const int amount, const int offset, const int data_size) {
     for(int i=0; i<amount; i++){
-        for(int j=0; j<IMAGE_SIZE*IMAGE_SIZE; j++){
-            x[i][j] = il[(i+offset)%data_size].pixel[j/IMAGE_SIZE][j%IMAGE_SIZE];
+        for(int j=0; j<(image_size*image_size); j++){
+            x[i][j] = il[(i+offset)%data_size].pixel[j/image_size][j%image_size];
             x[i][j] = (float)x[i][j]/255;  // map to 0-1
         }
+    }
+}
+
+void AnnOpenCL::load_labels(int *label_target, const imageLabel *il, const int amount, const int offset, const int data_size) {
+    for(int i=0; i<amount; i++){
+    	label_target[i] = (int) il[(i+offset)%data_size].label;
     }
 }
