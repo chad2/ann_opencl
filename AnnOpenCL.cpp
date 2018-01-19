@@ -490,7 +490,7 @@ void AnnOpenCL::update_params(const float learning_rate) {
 
 	//--------------------------------------------------------------------------------
 	const size_t local_update[] = {1};
-	const size_t global_update[] = {1};
+	const size_t global_update[] = {4};
 	clEnqueueNDRangeKernel(queue, kernel_update_params, 1, 0, global_update, local_update, 0, NULL, &event);
 
 	// Wait for calculations to be finished
