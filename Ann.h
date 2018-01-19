@@ -1,15 +1,15 @@
 #ifndef ANN_H
 #define ANN_H
 
-#define USE_OPEN_CL 1
-
 #include "imageLabel.h"
 #include "Reader.h"
 #include "string"
 #include <iostream>
 #include <math.h>
 #include <limits>
+#if DISABLE_OPENCL == 0
 #include "clMul.h"
+#endif
 #include <unistd.h>
 #include <iomanip>
 
@@ -42,7 +42,9 @@ private:
     imageLabel* train_data;
     imageLabel* test_data;
     Activation act;
+#if DISABLE_OPENCL == 0
     clMul clm;
+#endif
 
     float** x;      // input matrix
 

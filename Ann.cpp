@@ -45,7 +45,7 @@ void Ann::free_mat(float **toFree) {
  * @param w Width of matrix b
  */
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
-    #if USE_OPEN_CL == 0
+    #if DISABLE_OPENCL == 1
         float** b_transp = create_mat(w, hw);
         transp_mat(b, b_transp, hw, w);
 
@@ -71,7 +71,7 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
         free_mat(b_transp);
         b_transp = nullptr;
         
-    #elif USE_OPEN_CL == 1
+    #elif DISABLE_OPENCL == 0
         #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
 
         size_t TS = this->clm.getWorkGroupSize();
