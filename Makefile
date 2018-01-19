@@ -1,13 +1,21 @@
 PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-OBJS = main.o Ann.o Reader.o imageLabel.o clMul.o
+OBJS = main.o Ann.o Reader.o imageLabel.o
 
-BUILD_MODE = run
+ENABLE_FULL_OPENCL = 0
+DISABLE_OPENCL = 0
+ENABLE_SANITIZE = 0
+
+BUILD_MODE = debug
 
 ifeq ($(BUILD_MODE),debug)
 	CFLAGS = -g -O0
-	CFLAGS += -fsanitize=address -DDEBUG
-	LFLAGS = -lasan
+	LFLAGS =
+	ifeq ($(ENABLE_SANITIZE),1)
+		LFLAGS += -lasan
+		CFLAGS += -fsanitize=address
+	endif
+	CFLAGS += -DDEBUG
 else ifeq ($(BUILD_MODE),run)
 	CFLAGS = -O3 -mtune=native -march=native -funroll-loops -funroll-all-loops
 	CFLAGS += -pie -fPIE
@@ -17,14 +25,17 @@ else
 endif
 
 CPPFLAGS += -std=c++11 -Wall
-CFLAGS += -Wall
+CFLAGS += -Wall -DENABLE_FULL_OPENCL=$(ENABLE_FULL_OPENCL) -DDISABLE_OPENCL=$(DISABLE_OPENCL)
 LFLAGS += -lm
 
-ifeq ($(OS),Windows_NT)
-	CPPFLAGS += -I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include"
-	LFLAGS += -L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" -lOpenCL
-else
-	LFLAGS += -lOpenCL
+ifeq ($(DISABLE_OPENCL),0)
+	OBJS += clMul.o AnnOpenCL.o
+	ifeq ($(OS),Windows_NT)
+		CPPFLAGS += -I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include"
+		LFLAGS += -L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" -lOpenCL
+	else
+		LFLAGS += -lOpenCL
+	endif
 endif
 
 all:	main
