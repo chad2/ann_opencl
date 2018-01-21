@@ -1,8 +1,8 @@
 #include "imageLabel.h"
 
 /**
- *
- * @param il
+ * Prints given imageLabel with correct classification to console.
+ * @param il imageLabel to be printed.
  */
 void imageLabel::print(imageLabel *il) {
     std::cout << +il->label << std::endl;

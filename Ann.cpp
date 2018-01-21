@@ -9,7 +9,7 @@ Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_la
 
 
 /**
- *
+ * Creates a coherent pool of memory adressable in two dimensions.
  * @param h Height of created matrix.
  * @param w Width of created matrix.
  * @return Matrix with size h x w.
@@ -24,7 +24,7 @@ float **Ann::create_mat(int h, int w) {
 }
 
 /**
- *
+ * Frees memory of matrix created by create_mat.
  * @param toFree Matrix to be freed.
  */
 void Ann::free_mat(float **toFree) {
@@ -36,7 +36,7 @@ void Ann::free_mat(float **toFree) {
 }
 
 /**
- *
+ * Mutiplies two matrices.
  * @param a
  * @param b
  * @param c Result of a*b, with size h x w.
@@ -137,8 +137,8 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
     #endif
 }
 /**
- *
- * @param in
+ * Transposes matrix in.
+ * @param in Matrix to be transposed.
  * @param res Result of transposed matrix in.
  * @param h Height of matrix in.
  * @param w Width of matrix in.
@@ -152,7 +152,7 @@ void Ann::transp_mat(float **in, float **res, int h, int w) {
 }
 
 /**
- *
+ * Loads images into input matrix x, maps pixel values 0-1.
  * @param x Neural network input matrix.
  * @param il Dataset to be filled into matrix x. (test/train)
  * @param amount Amount of datapoints loaded into x. (amount <= batchsize)
@@ -169,7 +169,7 @@ void Ann::load_input(float **x, imageLabel *il, int amount, int offset, int data
 }
 
 /**
- *
+ * Initialises matrix with uniform distribured values from min to max.
  * @param mat Matrix to be initialized with random values.
  * @param h Height of matrix mat.
  * @param w Width of matrix mat.
@@ -185,10 +185,10 @@ void Ann::init_rand(float **mat, int h, int w, float min, float max) {
 }
 
 /**
- *
- * @param mat
- * @param bias Biasvector with size 1 x h.
- * @param res Result of mat + bias. (broadcasted add)
+ * Adds bias vector to each line in matrix.
+ * @param mat Matrix sized h x w.
+ * @param bias Biasvector with size 1 x w.
+ * @param res Resulting matrix.
  * @param h Height of matrix mat.
  * @param w Width of matrix mat.
  */
@@ -201,9 +201,9 @@ void Ann::broadcasted_add(float **mat, float **bias, float **res, int h, int w) 
 }
 
 /**
- *
+ * Applies an activiation function given matrix, to be used between network layers.
  * @param in Matrix to be passed through activation function.
- * @param res Result of act(in). Act being a previously chosen activation function.
+ * @param res Result of activation(in).
  * @param h Height of matrix in.
  * @param w Width of matrix in.
  */
@@ -221,9 +221,9 @@ void Ann::act_mat(float **in, float **res, int h, int w) {
 }
 
 /**
- *
+ * Exponates values of given matrix elementwise.
  * @param in Matrix containing raw outputs from NN.
- * @param res Result of elementwise exp(in).
+ * @param res Resulting matrix.
  * @param h Height of matrix in.
  * @param w Width of matrix in.
  */
@@ -239,7 +239,7 @@ void Ann::exp_mat(float **in, float **res, int h, int w) {
 }
 
 /**
- *
+ * Applies softmax function on given matrix.
  * @param in Matrix containing exponated outputs from the NN.
  * @param res Matrix containing probabilities of classes for every datasample.
  * @param h Height of matrix in.
@@ -258,14 +258,14 @@ void Ann::softmax_mat(float **in, float **res, int h, int w) {
 }
 
 /**
- *
+ * Computes cross entropy loss.
  * @param il imageLabel data used to compute probs in matrix a.
  * @param a Matrix filled with probabilities for datasamples.
  * @param h Height of matrix a.
  * @param w Width of matrix b.
  * @param train_step Current iterationstep.
  * @param data_size Size of datastrucure given in il.
- * @return Network loss.
+ * @return Cross entropy loss.
  */
 float Ann::ce_loss(imageLabel *il, float **a, int h, int w, int train_step, int data_size) {
     float sum = 0;
@@ -282,7 +282,7 @@ float Ann::ce_loss(imageLabel *il, float **a, int h, int w, int train_step, int 
     return sum;
 }
 /**
- *
+ * Computes gradient for softmax layer.
  * @param il ImageLabel data used in forwardpass.
  * @param in Matrix containing probabilities.
  * @param res Gradient on raw score output from NN.
@@ -306,11 +306,10 @@ void Ann::bp_ce_softmax(imageLabel *il, float **in, float **res, int h, int w, i
     }
 }
 /**
- *bp_w(r_a1, d_r_b2, d_w2, batchsize, first_layer_neurons, second_layer_neurons);
- * x*w=r  dr/dw = xT*1 = r
- * @param x Input from layer above.
+ * Computes gradient on weight matrix.
+ * @param x Input of current layer.
  * @param prev Gradient from previous backprop layer, sized h x w.
- * @param res Resulting gradient on weightmatrix.
+ * @param res Resulting gradient on weight matrix w.
  * @param hw Height of matrix x, height of matrix prev.
  * @param h Width of matrix x.
  * @param w Width of matrix prev.
@@ -324,13 +323,13 @@ void Ann::bp_w(float **x, float **prev, float **res, int hw, int h, int w) {
 }
 
 /**
- *
- * @param w_
- * @param prev
- * @param res
- * @param hw
- * @param h
- * @param w
+ * Computes gradient on input matrix.
+ * @param w Weights of current layer.
+ * @param prev Gradient from previous backprop layer.
+ * @param res Resulting gradient on input matrix x.
+ * @param hw Width of prev, width of w_.
+ * @param h Height of prev.
+ * @param w Height of w_.
  */
 void Ann::bp_x(float **w_, float **prev, float **res, int hw, int h, int w) {
     float** wT = create_mat(hw, w);
@@ -340,29 +339,29 @@ void Ann::bp_x(float **w_, float **prev, float **res, int hw, int h, int w) {
     free_mat(wT);
 }
 /**
- *
- * @param prev
- * @param r
- * @param h
- * @param w
+ * Computes gradient on bias.
+ * @param prev Gradient from previous backprop layer.
+ * @param res Resulting gradient on bias matrix b.
+ * @param h Height of matrix prev.
+ * @param w Width of matrix prev, length of bias vector b.
  */
-void Ann::bp_b(float **prev, float **r, int h, int w) {
+void Ann::bp_b(float **prev, float **res, int h, int w) {
     float sum;
     for(int i=0; i<w; i++){
         sum = 0;
-        for(int j=0; j<h; j++){
+        for(int j=0; j<h; j++){ 
             sum += prev[j][i];
         }
-        r[0][i] = sum;
+        res[0][i] = sum;
     }
 }
 /**
- *
- * @param x
- * @param prev
- * @param res
- * @param h
- * @param w
+ * Computes gradient on activation function.
+ * @param x Input to activation in forward pass.
+ * @param prev Previous gradient.
+ * @param res Resulting gradient.
+ * @param h Height of matrix x.
+ * @param w Width of matrix x.
  */
 void Ann::bp_act(float **x, float **prev, float **res, int h, int w) {
     for(int i=0; i<h; i++){
@@ -377,12 +376,12 @@ void Ann::bp_act(float **x, float **prev, float **res, int h, int w) {
     }
 }
 /**
- *
- * @param param
- * @param d_param
- * @param lr
- * @param h
- * @param w
+ * Steps parameter into downward direction of errorfunction.
+ * @param param Learnable parameter to be updated.
+ * @param d_param Gradient on parameter param.
+ * @param lr Learning rate.
+ * @param h Height of param.
+ * @param w Width of param.
  */
 void Ann::update_param(float **param, float **d_param, float lr, int h, int w) {
     for(int i=0; i<h; i++){
@@ -392,11 +391,11 @@ void Ann::update_param(float **param, float **d_param, float lr, int h, int w) {
     }
 }
 /**
- *
- * @param train_label_file
- * @param train_image_file
- * @param test_label_file
- * @param test_image_file
+ * Loads mnist dataset into train_data and test_data fields.
+ * @param train_label_file Path to training label file.
+ * @param train_image_file Path to training image file.
+ * @param test_label_file Path to test image file.
+ * @param test_image_file Path to test image file.
  */
 void Ann::init_data(std::string train_label_file, std::string train_image_file, std::string test_label_file,
                     std::string test_image_file) {
@@ -404,7 +403,7 @@ void Ann::init_data(std::string train_label_file, std::string train_image_file, 
     test_data = Reader::load_data(test_size, test_label_file, test_image_file);
 }
 /**
- *
+ * Creates matrices for forward and backward step and initialises parameters with random values.
  */
 void Ann::init_mats() {
     x = create_mat(batchsize, IMAGE_SIZE*IMAGE_SIZE);
@@ -437,10 +436,10 @@ void Ann::init_mats() {
     init_rand(b2, 1, second_layer_neurons, -0.1, 0.1);
 }
 /**
- *
- * @param training
- * @param step
- * @return
+ * Computes a forward step for the entire network.
+ * @param training Wether the network should use training or testdata.
+ * @param step Current network step.
+ * @return Cross entropy loss.
  */
 float Ann::forward_pass(bool training, int step) {
     int data_size = training ? train_size : test_size;
@@ -460,9 +459,9 @@ float Ann::forward_pass(bool training, int step) {
     return loss;
 }
 /**
- *
- * @param training
- * @param step
+ * Computes gradients on all network paramters.
+ * @param training Wether the network was using training or testdata.
+ * @param step Current network step.
  */
 void Ann::backprop(bool training, int step) {
     int data_size = training ? train_size : test_size;
@@ -477,8 +476,8 @@ void Ann::backprop(bool training, int step) {
     bp_b(d_r_b1, d_b1, batchsize, first_layer_neurons);
 }
 /**
- *
- * @param learning_rate
+ * Performs a learning step on all network parameters.
+ * @param learning_rate Learning rate.
  */
 void Ann::update_params(float learning_rate) {
     update_param(w1, d_w1, learning_rate, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
@@ -489,10 +488,10 @@ void Ann::update_params(float learning_rate) {
 
 /**
  *
- * @param training
- * @param step
- * @param visual
- * @return
+ * @param training Wether the network was using training or testdata.
+ * @param step Network step used, offset for imageLabel data.
+ * @param visual Wether a visual sample of classifications should be displayed or not.
+ * @return Classification accuracy on given step, precision depending on batchsize.
  */
 float Ann::calc_acc(bool training, int step, bool visual) {
     int data_size = training ? train_size : test_size;

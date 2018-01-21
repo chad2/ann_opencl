@@ -16,9 +16,9 @@
 - `ENABLE_SANITIZE=1`: enables `-fstanitize=address` and `-lasan` to find memory errors (uses a lot of RAM\!)
 
 ## runtime 
-### i5 3570k, GTX 1060 (6 GB) , FL_NEURONS = 300, BATCHSIZE = 100
-* `./main` :          28.9 seconds
-* `python3 ./mnist_keras.py` :  20.1 seconds
+### i5 3570k, GTX 1060 (6 GB) , FL_NEURONS = 256, BATCHSIZE = 128, EPOCHS = 5
+* `./main` :          23.5 seconds
+* `python3 ./mnist_keras.py` :  12.79 seconds
 
 
 ## References
