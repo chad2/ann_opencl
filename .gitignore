@@ -84,3 +84,4 @@ latex/make.bat
 latex/Makefile
 .cproject
 .project
+*.stackdump
