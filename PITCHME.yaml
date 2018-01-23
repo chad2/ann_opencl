@@ -3,3 +3,4 @@ theme-override : https://github.com/gitpitch/gitpitch/raw/master/assets/css/PITC
 background : https://raw.githubusercontent.com/gitpitch/gitpitch/master/assets/images/wallpaper.jpg
 transition : none
 published : true
+mathjax : TeX-MML-AM_HTMLorMML-full
