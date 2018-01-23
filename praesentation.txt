@@ -1,0 +1,56 @@
+titel
+
+github link
+
+neuronale netze
+	- anwendungen / Bestandteilepiele(bilder)
+	- funktionsweise
+		- Bestandteile(https://jalammar.github.io/visual-interactive-guide-basics-neural-networks#classification)
+		- Forwardpass
+		- backprop
+		- update
+	- epochs/lr-> w.b, decay /  / batches / loss / acc / init / activation
+	- 
+
+problemstellung
+	- bildklassifizierung
+	- mnist examples
+
+praktikumsaufgabe
+	- cpu / opencl 
+
+codevorstellung
+	- uml 
+
+/////////////////
+main
+	- makefile macros
+	- const params
+	- loop explain content
+ann.cpp
+	- init
+	- forward
+	- backprop
+	- update
+	- mulmat überleitung
+	- padding
+
+clmul.cpp
+	- matmul
+	- kernel
+
+annopencl.cpp
+	- speicheralloc
+	- kernel parameter
+
+annopencl_kernel.cl
+	- forward
+	- backprop
+	- update
+
+demo
+	- cpu only
+	- cpu + opencl matmutl
+	- full opencl
+
+
