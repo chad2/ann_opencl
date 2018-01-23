@@ -1,0 +1,5 @@
+theme : beige
+theme-override : https://github.com/gitpitch/gitpitch/raw/master/assets/css/PITCHME.css
+background : https://raw.githubusercontent.com/gitpitch/gitpitch/master/assets/images/wallpaper.jpg
+transition : none
+published : true
