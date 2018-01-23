@@ -1,5 +1,8 @@
 # ann_opencl
 
+## presentation
+[https://gitpitch.com/chad2/ann_opencl#/](https://gitpitch.com/chad2/ann_opencl#/)
+
 # how to use
 1. `make init`
     - creates 'data' folder
