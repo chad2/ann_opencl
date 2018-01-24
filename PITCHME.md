@@ -9,12 +9,11 @@
 
 @title[Anwendung]
 ### Anwendung
-![](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/imgs/horse2zebra.gif?raw=true)
+![](https://github.com/tensorflow/models/raw/master/research/object_detection/g3doc/img/kites_detections_output.jpg&size=auto)
 Note:
 beispielhaft neue textur
 objekterkennung - automes fahren
 hier: simpler klassifizierung
-https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
 ---
 
 @title[Funktionsweise]
