@@ -50,7 +50,7 @@ Note:
 @title[Aktivierungsfunktion]
 ### Aktivierungfunktion
 <div class="left">
-![](https://cs231n.github.io/assets/nn1/relu.jpeg)
+![](https://cs231n.github.io/assets/nn1/relu.jpeg) <br>
  Relu
 </div>
 <div class="right">
