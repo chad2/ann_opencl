@@ -1,5 +1,5 @@
 @title[Artificial neural network - CPU & OpenCL]
-## Artificial neural network - CPU & OpenCL
+## Artificial neural network - C++ & OpenCL
 [https://www.github.com/chad2/annopencl]
 ---
 
@@ -9,39 +9,54 @@
 
 @title[Anwendung]
 ### Anwendung
+
+##### Texterkennung
+##### Bilderkennung
+##### Gesichtserkennung
+
 ![](https://github.com/tensorflow/models/raw/master/research/object_detection/g3doc/img/kites_detections_output.jpg&size=auto)
+
 Note:
-beispielhaft neue textur
-objekterkennung - automes fahren
-hier: simpler klassifizierung
+- objekterkennung - autonomes fahren
+- hier: simple klassifizierung
 ---
 
 @title[Funktionsweise]
 ### Funktionsweise
-![](https://cs231n.github.io/assets/nn1/neural_net.jpeg)
-Note:
-input layer dim 784
-output layer dim 10
-3x4 weights + 4 biases
-4x2 weights + 2 biases
-act between
----
 
-@title[Aktivierungsfunktion]
-### Aktivierungfunktion
-![](https://cs231n.github.io/assets/nn1/relu.jpeg)
-![](https://cs231n.github.io/assets/nn1/tanh.jpeg)
+![](https://cs231n.github.io/assets/nn1/neural_net.jpeg)
+
 Note:
-ohne act nur lineare klassifizierung
-2d linie / 3d ebene
-muss differenzierbar sein, drelu = 0
+- input layer dim 784 (28*28)
+- output layer dim 10
+- 3x4 weights + 4 biases
+- 4x2 weights + 2 biases
+- act between
 
 ---
 @title[Forwardpass]
 ### Forwardpass
+
 ![](http://cs231n.github.io/assets/nn1/neuron_model.jpeg)
+
 Note:
-random init b/w
+- random init b/w
+---
+
+@title[Aktivierungsfunktion]
+### Aktivierungfunktion
+
+![](https://cs231n.github.io/assets/nn1/relu.jpeg)
+#### Relu
+
+![](https://cs231n.github.io/assets/nn1/tanh.jpeg)
+#### Hyperbolic Tangent
+
+Note:
+- ohne act nur lineare klassifizierung
+- 2d linie / 3d ebene
+- muss differenzierbar sein, drelu = 0
+
 ---
 
 @title[Probabilities + Loss]
@@ -104,46 +119,70 @@ random init b/w
   </mstyle>
 </math>
 
+#### TODO - vector example
+
 Note:
-i index of correct label/class
-loss needs to reduce
+- i index of correct label/class
+- loss needs to reduce
 ---
 
 @title[Backprop]
 ### Partiell nach allen Parametern ableiten
+
 <svg width="420" height="220"><defs><marker id="arrowhead" refX="6" refY="2" markerWidth="6" markerHeight="4" orient="auto"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><line x1="40" y1="30" x2="110" y2="30" stroke="white" stroke-width="1"></line><text x="45" y="24" font-size="16" fill="green">-2</text><text x="45" y="47" font-size="16" fill="red">-4</text><text x="35" y="24" font-size="16" text-anchor="end" fill="white">x</text><line x1="40" y1="100" x2="110" y2="100" stroke="white" stroke-width="1"></line><text x="45" y="94" font-size="16" fill="green">5</text><text x="45" y="117" font-size="16" fill="red">-4</text><text x="35" y="94" font-size="16" text-anchor="end" fill="white">y</text><line x1="40" y1="170" x2="110" y2="170" stroke="white" stroke-width="1"></line><text x="45" y="164" font-size="16" fill="green">-4</text><text x="45" y="187" font-size="16" fill="red">3</text><text x="35" y="164" font-size="16" text-anchor="end" fill="white">z</text><line x1="210" y1="65" x2="280" y2="65" stroke="white" stroke-width="1"></line><text x="215" y="59" font-size="16" fill="green">3</text><text x="215" y="82" font-size="16" fill="red">-4</text><text x="205" y="59" font-size="16" text-anchor="end" fill="white">q</text><circle cx="170" cy="65" fill="white" stroke="white" stroke-width="1" r="20"></circle><text x="170" y="70" font-size="20" fill="black" text-anchor="middle">+</text><line x1="110" y1="30" x2="150" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="110" y1="100" x2="150" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="190" y1="65" x2="210" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="380" y1="117" x2="450" y2="117" stroke="white" stroke-width="1"></line><text x="385" y="111" font-size="16" fill="green">-12</text><text x="385" y="134" font-size="16" fill="red">1</text><text x="375" y="111" font-size="16" text-anchor="end" fill="white">f</text><circle cx="340" cy="117" fill="white" stroke="white" stroke-width="1" r="20"></circle><text x="340" y="127" font-size="20" fill="black" text-anchor="middle">*</text><line x1="280" y1="65" x2="320" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="110" y1="170" x2="320" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="360" y1="117" x2="380" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line></svg>
 
+#### TODO - 2 Ableitungen
+
+Note:
+- Gradienten für Inputs unnötig
 ---
 
-@title[Gradient descent]
-### Gradient descent
+@title[Gradienten Abstiegsverfahren]
+### Gradienten Abstiegsverfahren
 $$p = p + \frac{\partial L}{\partial p} (-\lambda)$$
 ![](https://cs231n.github.io/assets/nn3/opt2.gif)
+
 Note:
-use gradient from backprop
-step parameter w,b into negative gradient direction
-learning rate + decay
+- use gradient from backprop
+- step parameter w,b into negative gradient direction
+- learning rate + decay
 ---
 
 @title[Begrifflichkeiten]
 ### Begrifflichkeiten
-### Epoche
-### Batch
+#### Epoche
+#### Batch
+###### TODO - Messung 1
+###### TODO - Messung 2
 
----
-
-@title[problemstellung]
-### Problemstellung
-![](http://neuralnetworksanddeeplearning.com/images/ensemble_errors.png)
 Note:
-bildklassifizierung
-korrekt top
-classification bottom
+- Epoche: Ein Durchlauf durch alle Trainingsdaten
+- Batch: Vektor-Multiplikation zu Matrix-Vektor-Multiplikation
+
 ---
 
 @title[Praktikumsaufgabe]
 ### Praktikumsaufgabe
-cpu / opencl
+
+#### Hanschriftenerkennung MNIST Datensatz
+#### Implementierung:
+1. CPU mit C++
+2. CPU mit C++ und MatrixMultiplikation mit GPU (OpenCL)
+3. Komplettes Netz auf GPU
+
+---
+
+@title[Problemstellung]
+### Problemstellung
+![](http://neuralnetworksanddeeplearning.com/images/ensemble_errors.png)
+
+#### 60.000 Trainingsdate & 10.000 Testdaten
+#### Überwachtes Lernen
+
+Note:
+- bildklassifizierung
+- korrekt top
+- classification bottom
 ---
 
 @title[Codevorstellung]
@@ -320,41 +359,17 @@ cpu / opencl
   ></g
 ></svg>
 
-
-
 ---
 
 @title[Referenzen]
 ### Referenzen
-### https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
-### http://cs231n.github.io/optimization-2/
+#### https://github.com/tensorflow/models/tree/master/research/object_detection
+#### https://cs231n.github.io/
 ---
+
 <!--
-    titel
+Code show:
 
-github link
-
-neuronale netze
-    - anwendungen / Bestandteilepiele(bilder)
-    - funktionsweise
-        - Bestandteile(https://jalammar.github.io/visual-interactive-guide-basics-neural-networks#classification)
-        - Forwardpass
-        - backprop
-        - update
-    - epochs/lr-> w.b, decay /  / batches / loss / acc / init / activation
-    - 
-
-problemstellung
-    - bildklassifizierung
-    - mnist examples
-
-praktikumsaufgabe
-    - cpu / opencl 
-
-codevorstellung
-    - uml 
-
-/////////////////
 main
     - makefile macros
     - const params
@@ -384,7 +399,5 @@ demo
     - cpu only
     - cpu + opencl matmutl
     - full opencl
-
-
 
 -->
