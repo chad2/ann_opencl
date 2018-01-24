@@ -6,7 +6,7 @@
 ---
 
 @title[Anwendung]
-![](http://pytorch.org/static/img/horse2zebra.gif)
+![](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/imgs/horse2zebra.gif?raw=true)
 Note:
 beispielhaft neue textur
 objekterkennung - automes fahren
