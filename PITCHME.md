@@ -46,7 +46,64 @@ random init b/w
 
 @title[Probabilities + Loss]
 ### Probabilities + Loss
-$$L_i = -\log\left(\frac{e^{f_{y_i}}}{ \sum_j e^{f_j} }\right) \hspace{0.5in} \text{or equivalently} \hspace{0.5in} L_i = -f_{y_i} + \log\sum_j e^{f_j}$$
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mstyle displaystyle="true" scriptlevel="0">
+    <mrow class="MJX-TeXAtom-ORD">
+      <msub>
+        <mi>L</mi>
+        <mrow class="MJX-TeXAtom-ORD">
+          <mi>i</mi>
+        </mrow>
+      </msub>
+      <mo>=</mo>
+      <mo>&#x2212;<!-- − --></mo>
+      <mi>log</mi>
+      <mrow>
+        <mo>(</mo>
+        <mfrac>
+          <msup>
+            <mi>e</mi>
+            <mrow class="MJX-TeXAtom-ORD">
+              <msub>
+                <mi>f</mi>
+                <mrow class="MJX-TeXAtom-ORD">
+                  <msub>
+                    <mi>y</mi>
+                    <mrow class="MJX-TeXAtom-ORD">
+                      <mi>i</mi>
+                    </mrow>
+                  </msub>
+                </mrow>
+              </msub>
+            </mrow>
+          </msup>
+          <mrow>
+            <munder>
+              <mo>&#x2211;<!-- ∑ --></mo>
+              <mrow class="MJX-TeXAtom-ORD">
+                <mi>j</mi>
+              </mrow>
+            </munder>
+            <msup>
+              <mi>e</mi>
+              <mrow class="MJX-TeXAtom-ORD">
+                <msub>
+                  <mi>f</mi>
+                  <mrow class="MJX-TeXAtom-ORD">
+                    <mi>j</mi>
+                  </mrow>
+                </msub>
+              </mrow>
+            </msup>
+          </mrow>
+        </mfrac>
+        <mo>)</mo>
+      </mrow>
+    </mrow>
+  </mstyle>
+</math>
+
 Note:
 i index of correct label/class
 loss needs to reduce
