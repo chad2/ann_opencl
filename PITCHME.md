@@ -62,7 +62,7 @@ loss needs to reduce
 @title[Gradient descent]
 ### Gradient descent
 $$p = p + \frac{\partial L}{\partial p} (-\lambda)$$
-![](https://cs231n.github.io/assets/nn3/opt2.gif&size=auto 90%)
+![](https://cs231n.github.io/assets/nn3/opt2.gif)
 Note:
 use gradient from backprop
 step parameter w,b into negative gradient direction
