@@ -47,10 +47,10 @@ Note:
 ### Aktivierungfunktion
 
 ![](https://cs231n.github.io/assets/nn1/relu.jpeg)
-#### Relu
+##### Relu
 
 ![](https://cs231n.github.io/assets/nn1/tanh.jpeg)
-#### Hyperbolic Tangent
+##### Hyperbolic Tangent
 
 Note:
 - ohne act nur lineare klassifizierung
@@ -166,9 +166,9 @@ Note:
 
 #### Hanschriftenerkennung MNIST Datensatz
 #### Implementierung:
-1. CPU mit C++
-2. CPU mit C++ und MatrixMultiplikation mit GPU (OpenCL)
-3. Komplettes Netz auf GPU
+##### 1. CPU mit C++
+##### 2. CPU mit C++ und MatrixMultiplikation mit GPU (OpenCL)
+##### 3. Komplettes Netz auf GPU
 
 ---
 
