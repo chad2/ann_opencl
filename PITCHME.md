@@ -6,6 +6,7 @@
 ---
 
 @title[Anwendung]
+#Anwendung
 ![](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/imgs/horse2zebra.gif?raw=true)
 Note:
 beispielhaft neue textur
@@ -15,6 +16,7 @@ https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
 ---
 
 @title[Funktionsweise]
+#Funktionsweise
 ![](https://cs231n.github.io/assets/nn1/neural_net.jpeg)
 Note:
 input layer dim 784
@@ -25,6 +27,7 @@ act between
 ---
 
 @title[Aktivierungsfunktion]
+#Aktivierungfunktion
 ![](https://cs231n.github.io/assets/nn1/relu.jpeg)
 ![](https://cs231n.github.io/assets/nn1/tanh.jpeg)
 Note:
@@ -34,12 +37,14 @@ muss differenzierbar sein, drelu = 0
 
 ---
 @title[Forwardpass]
+#Forwardpass
 ![](http://cs231n.github.io/assets/nn1/neuron_model.jpeg)
 Note:
 random init b/w
 ---
 
 @title[Probabilities + Loss]
+#Probabilities + Loss
 $$L_i = -\log\left(\frac{e^{f_{y_i}}}{ \sum_j e^{f_j} }\right) \hspace{0.5in} \text{or equivalently} \hspace{0.5in} L_i = -f_{y_i} + \log\sum_j e^{f_j}$$
 Note:
 i index of correct label/class
@@ -53,6 +58,7 @@ loss needs to reduce
 ---
 
 @title[Gradient descent]
+#Gradient descent
 $$p = p + \frac{\partial L}{\partial p} (-\lambda)$$
 ![](https://cs231n.github.io/assets/nn3/opt2.gif)
 Note:
@@ -62,12 +68,14 @@ learning rate + decay
 ---
 
 @title[Begrifflichkeiten]
+#Begrifflichkeiten
 ### Epoche
 ### Batch
 
 ---
 
 @title[problemstellung]
+#Problemstellung
 ![](http://neuralnetworksanddeeplearning.com/images/ensemble_errors.png)
 Note:
 bildklassifizierung
@@ -76,6 +84,7 @@ classification bottom
 ---
 
 @title[Praktikumsaufgabe]
+#Praktikumsaufgabe
 cpu / opencl
 ---
 
@@ -258,6 +267,7 @@ cpu / opencl
 ---
 
 @title[Referenzen]
+#Referenzen
 ### https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
 ### http://cs231n.github.io/optimization-2/
 ---
