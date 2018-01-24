@@ -15,7 +15,7 @@ clMul::clMul(const char *path) {
     err = clGetPlatformIDs(1, &platform, NULL);
     checkError(err, __LINE__);
     cl_device_id device = 0;
-    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
     checkError(err, __LINE__);
     context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
     checkError(err, __LINE__);
@@ -146,7 +146,7 @@ size_t clMul::getWorkGroupSize() {
     err = clGetPlatformIDs(100,platforms, &platforms_n);  
     checkError(err, __LINE__);
 
-    err = clGetDeviceIDs( platforms[0], CL_DEVICE_TYPE_GPU, 100, devices, 
+    err = clGetDeviceIDs( platforms[0], CL_DEVICE_TYPE_ALL, 100, devices, 
                 &devices_n);
     checkError(err, __LINE__);
 

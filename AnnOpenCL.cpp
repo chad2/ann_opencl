@@ -94,7 +94,7 @@ void AnnOpenCL::prepareKernel() {
 	err = clGetPlatformIDs(1, &platform, NULL);
 	clMul::checkError(err, __LINE__);
 	cl_device_id device = 0;
-	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
 	clMul::checkError(err, __LINE__);
 	context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
 	clMul::checkError(err, __LINE__);
