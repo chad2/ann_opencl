@@ -73,9 +73,6 @@ Note:
     <mrow class="MJX-TeXAtom-ORD">
       <msub>
         <mi>L</mi>
-        <mrow class="MJX-TeXAtom-ORD">
-          <mi>i</mi>
-        </mrow>
       </msub>
       <mo>=</mo>
       <mo>&#x2212;<!-- − --></mo>
@@ -90,10 +87,7 @@ Note:
                 <mi>f</mi>
                 <mrow class="MJX-TeXAtom-ORD">
                   <msub>
-                    <mi>y</mi>
-                    <mrow class="MJX-TeXAtom-ORD">
-                      <mi>i</mi>
-                    </mrow>
+                    <mi>i</mi>
                   </msub>
                 </mrow>
               </msub>
@@ -137,8 +131,8 @@ Note:
 <svg width="420" height="220"><defs><marker id="arrowhead" refX="6" refY="2" markerWidth="6" markerHeight="4" orient="auto"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><line x1="40" y1="30" x2="110" y2="30" stroke="white" stroke-width="1"></line><text x="45" y="24" font-size="16" fill="green">-2</text><text x="45" y="47" font-size="16" fill="red">-4</text><text x="35" y="24" font-size="16" text-anchor="end" fill="white">x</text><line x1="40" y1="100" x2="110" y2="100" stroke="white" stroke-width="1"></line><text x="45" y="94" font-size="16" fill="green">5</text><text x="45" y="117" font-size="16" fill="red">-4</text><text x="35" y="94" font-size="16" text-anchor="end" fill="white">y</text><line x1="40" y1="170" x2="110" y2="170" stroke="white" stroke-width="1"></line><text x="45" y="164" font-size="16" fill="green">-4</text><text x="45" y="187" font-size="16" fill="red">3</text><text x="35" y="164" font-size="16" text-anchor="end" fill="white">z</text><line x1="210" y1="65" x2="280" y2="65" stroke="white" stroke-width="1"></line><text x="215" y="59" font-size="16" fill="green">3</text><text x="215" y="82" font-size="16" fill="red">-4</text><text x="205" y="59" font-size="16" text-anchor="end" fill="white">q</text><circle cx="170" cy="65" fill="white" stroke="white" stroke-width="1" r="20"></circle><text x="170" y="70" font-size="20" fill="black" text-anchor="middle">+</text><line x1="110" y1="30" x2="150" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="110" y1="100" x2="150" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="190" y1="65" x2="210" y2="65" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="380" y1="117" x2="450" y2="117" stroke="white" stroke-width="1"></line><text x="385" y="111" font-size="16" fill="green">-12</text><text x="385" y="134" font-size="16" fill="red">1</text><text x="375" y="111" font-size="16" text-anchor="end" fill="white">f</text><circle cx="340" cy="117" fill="white" stroke="white" stroke-width="1" r="20"></circle><text x="340" y="127" font-size="20" fill="black" text-anchor="middle">*</text><line x1="280" y1="65" x2="320" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="110" y1="170" x2="320" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line><line x1="360" y1="117" x2="380" y2="117" stroke="white" stroke-width="1" marker-end="url(#arrowhead)"></line></svg>
 
 
-$$ f = q \cdot z $$
-$$ \frac{\partial f}{\partial q} = z \hspace{0.5in}
+$$ f = q \cdot z \hspace{0.5in}
+\frac{\partial f}{\partial q} = z \hspace{0.5in}
  \frac{\partial f}{\partial z} = q $$ 
 Note:
 - TODO . Bild vergrößern
