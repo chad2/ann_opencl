@@ -123,6 +123,7 @@ Note:
 Note:
 - i index of correct label/class
 - loss needs to reduce
+- TODO: fix "L= -\log(0.73) = 0.32 " not rendering
 ---
 
 @title[Backprop]
@@ -148,6 +149,7 @@ Note:
 - use gradient from backprop
 - step parameter w,b into negative gradient direction
 - learning rate + decay
+- TODO: fix image size
 ---
 
 @title[Begrifflichkeiten]
