@@ -3,7 +3,10 @@
 #include "clMul.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <memory>
+
+#define CHAR_STRING_LENGTH  1024
 
 clMul::clMul(const char *path) {
     cl_int err = CL_SUCCESS;
@@ -21,8 +24,8 @@ clMul::clMul(const char *path) {
     checkError(err, __LINE__);
     queue = clCreateCommandQueue(context, device, 0, &err);
     checkError(err, __LINE__);
-    char deviceName[1024];
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 1024, deviceName, NULL);
+    char deviceName[CHAR_STRING_LENGTH] = {'\0'};
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, CHAR_STRING_LENGTH, deviceName, NULL);
     checkError(err, __LINE__);
 
     // Compile the kernel
@@ -30,9 +33,9 @@ clMul::clMul(const char *path) {
     checkError(err, __LINE__);
 
     //Build kernel with defined options
-    char compilerOptions[30] = {'\0'};
-    snprintf(compilerOptions, 30, "-DTS=%d -DWIDTH=%d", this->wotkGroupSize, WIDTH);
-    compilerOptions[29] = '\0';
+    char compilerOptions[CHAR_STRING_LENGTH] = {'\0'};
+    snprintf(compilerOptions, CHAR_STRING_LENGTH, "-DTS=%d -DWIDTH=%d", static_cast<int>(this->wotkGroupSize), WIDTH);
+    compilerOptions[CHAR_STRING_LENGTH-1] = '\0';
     err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
     checkError(err, __LINE__);
 
@@ -40,14 +43,13 @@ clMul::clMul(const char *path) {
     size_t logSize;
     err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
     checkError(err, __LINE__);
-    char* messages = (char*)malloc((1+logSize)*sizeof(char));
+    char messages[logSize + 1];
     err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, logSize, messages, NULL);
     checkError(err, __LINE__);
     messages[logSize] = '\0';
     if (logSize > 10) { printf(">>> Compiler message: %s\n", messages); }
-    free(messages);
 
-    kernel = clCreateKernel(program, "myGEMM4", &err);
+    kernel = clCreateKernel(program, KERNEL_FUNCTION_NAME, &err);
     checkError(err, __LINE__);
 
     this->wotkGroupSize = clMul::getWorkGroupSize();
@@ -59,12 +61,13 @@ clMul::clMul(const char *path) {
     program = clCreateProgramWithSource(context, 1, (const char **)kernelstring, NULL, &err);
     checkError(err, __LINE__);
 
-    snprintf(compilerOptions, 30, "-DTS=%d -DWIDTH=%d", this->wotkGroupSize, WIDTH);
-    compilerOptions[29] = '\0';
+    std::memset(compilerOptions, '\0', sizeof(char) * CHAR_STRING_LENGTH );
+    snprintf(compilerOptions, CHAR_STRING_LENGTH, "-DTS=%d -DWIDTH=%d", static_cast<int>(this->wotkGroupSize), WIDTH);
+    compilerOptions[CHAR_STRING_LENGTH-1] = '\0';
     err = clBuildProgram(program, 0, NULL, compilerOptions, NULL, NULL);
     checkError(err, __LINE__);
 
-    kernel = clCreateKernel(program, "myGEMM4", &err);
+    kernel = clCreateKernel(program, KERNEL_FUNCTION_NAME, &err);
     checkError(err, __LINE__);
 
     clMul::freeCode(kernelstring, count);

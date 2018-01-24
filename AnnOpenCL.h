@@ -4,6 +4,7 @@
 using namespace std;
 
 #include "imageLabel.h"
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include <CL/cl.h>
 #include <string>
 

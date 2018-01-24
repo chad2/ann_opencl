@@ -1,8 +1,12 @@
 #ifndef CLMUL_H
 #define CLMUL_H
-#define WIDTH 1
+
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include <CL/cl.h>
 #include <iostream>
+
+#define WIDTH   1
+#define KERNEL_FUNCTION_NAME    "myGEMM4"
 
 class clMul {
 public:

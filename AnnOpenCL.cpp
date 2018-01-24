@@ -456,7 +456,7 @@ void AnnOpenCL::backprop(const bool training, const int step) {
 	cl_int err = CL_SUCCESS;
 	const int data_size = training ? train_size : test_size;
 	const imageLabel* data = training ? train_data : test_data;
-	size_t h = 0, w = 0;
+	size_t w = 0;
 
 	//write label for training backpropagation to GPU buffer
 	w = batchsize;
