@@ -13,6 +13,9 @@ using namespace std;
 
 #define KERNEL_FORWARD			"forward_pass"
 #define KERNEL_BACKPROP			"backprop"
+#define KERNEL_BACKPROP_3		"backprop_1"
+#define KERNEL_BACKPROP_3		"backprop_2"
+#define KERNEL_BACKPROP_3		"backprop_3"
 #define KERNEL_UPDATE_PARAMS	"update_params"
 
 class AnnOpenCL {
@@ -72,6 +75,9 @@ protected:
 
 	cl_kernel kernel_forward;
 	cl_kernel kernel_backprop;
+	cl_kernel kernel_backprop_1;
+	cl_kernel kernel_backprop_2;
+	cl_kernel kernel_backprop_3;
 	cl_kernel kernel_update_params;
 	cl_context context;
 	cl_command_queue queue;

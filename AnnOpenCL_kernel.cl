@@ -24,7 +24,7 @@ void mul_mat(const __global float *A, const __global float *B, __global float *C
 }
 void mul_mat_transpA(const __global float *A, const __global float *B, __global float *C,
 		const int M, const int K, const int N)
-{	
+{
 	for(int i=0; i < M; i++) {
 		for(int j=0; j < N; j++) {
 			float sum = 0;
@@ -274,7 +274,9 @@ __kernel void backprop(
 		&d_r_b2[global_id * second_layer_neurons],
 		second_layer_neurons
 	);
+
 	barrier(CLK_GLOBAL_MEM_FENCE);
+
 	if(global_id == 0 && local_id == 0) {
 		bp_w(
 			r_a1,
@@ -314,6 +316,7 @@ __kernel void backprop(
 	);
 	
 	barrier(CLK_GLOBAL_MEM_FENCE);
+
 	if(global_id == 0 && local_id == 0) {
 		bp_w(
 			x,
@@ -332,6 +335,184 @@ __kernel void backprop(
 			batchsize,
 			first_layer_neurons
 		);
+	}
+}
+
+__kernel void backprop_1(
+		const int batchsize,
+		const int classes,
+		const int first_layer_neurons,
+		const int second_layer_neurons,
+		const int epochs,
+		const int image_size,
+		const float learning_rate,
+		const __global float *loss,
+		const __global float *x,
+		const __global float *w1,
+		const __global float *d_w1,
+		const __global float *r_w1,
+		const __global float *b1,
+		const __global float *d_b1,
+		const __global float *r_b1,
+		__global float *d_r_b1,
+		const __global float *r_a1,
+		__global float *d_r_a1,
+		const __global float *w2,
+		const __global float *d_w2,
+		const __global float *r_w2,
+		const __global float *b2,
+		__global float *d_b2,
+		const __global float *r_b2,
+		__global float *d_r_b2,
+		const __global float *er,
+		const __global float *probs_cl,
+		const __global int *labels
+) {
+	const int global_id = get_global_id(0);
+	const int local_id = get_local_id(0);
+
+	bp_ce_softmax(
+		labels[global_id],
+		&probs_cl[global_id * classes],
+		&d_r_b2[global_id * second_layer_neurons],
+		second_layer_neurons
+	);
+
+	barrier(CLK_GLOBAL_MEM_FENCE);
+
+	if(global_id == 0 && local_id == 0) {
+		bp_b(
+			d_r_b2,
+			d_b2,
+			batchsize,
+			second_layer_neurons
+		);
+	}
+
+	bp_x(
+		w2,
+		&d_r_b2[global_id * second_layer_neurons],
+		&d_r_a1[global_id * first_layer_neurons],
+		second_layer_neurons,
+		1,
+		first_layer_neurons
+	);
+
+	barrier(CLK_GLOBAL_MEM_FENCE);
+
+	bp_act(
+		&r_b1[global_id * first_layer_neurons],
+		&d_r_a1[global_id * first_layer_neurons],
+		&d_r_b1[global_id * first_layer_neurons],
+		first_layer_neurons
+	);
+}
+
+__kernel void backprop_2(
+		const int batchsize,
+		const int classes,
+		const int first_layer_neurons,
+		const int second_layer_neurons,
+		const int epochs,
+		const int image_size,
+		const float learning_rate,
+		const __global float *loss,
+		const __global float *x,
+		const __global float *w1,
+		const __global float *d_w1,
+		const __global float *r_w1,
+		const __global float *b1,
+		__global float *d_b1,
+		const __global float *r_b1,
+		__global float *d_r_b1,
+		const __global float *r_a1,
+		const __global float *d_r_a1,
+		const __global float *w2,
+		__global float *d_w2,
+		const __global float *r_w2,
+		const __global float *b2,
+		const __global float *d_b2,
+		const __global float *r_b2,
+		const __global float *d_r_b2,
+		const __global float *er,
+		const __global float *probs_cl,
+		const __global int *labels
+) {
+	const int global_id = get_global_id(0);
+	const int local_id = get_local_id(0);
+
+	//modified mul_mat_transpA
+	const __global float *A = r_a1;
+	const __global float *B = d_r_b2;
+	__global float *C = d_w2;
+	const int M = first_layer_neurons;
+	const int K = batchsize;
+	const int N = second_layer_neurons;
+	for(int i=global_id; i < (global_id+1); i++) {
+		for(int j=0; j < N; j++) {
+			float sum = 0;
+			for(int k=0; k < K; k++) {
+				sum += A[(k*M) + i] * B[(k*N) + j];
+			}
+			C[(i*N) + j] = sum;
+		}
+	}
+
+	float sum = 0;
+	for(int j=0; j<batchsize; j++){
+		sum += d_r_b1[(j*first_layer_neurons) + global_id];
+	}
+	d_b1[global_id] = sum;
+}
+
+__kernel void backprop_3(
+		const int batchsize,
+		const int classes,
+		const int first_layer_neurons,
+		const int second_layer_neurons,
+		const int epochs,
+		const int image_size,
+		const float learning_rate,
+		const __global float *loss,
+		const __global float *x,
+		const __global float *w1,
+		__global float *d_w1,
+		const __global float *r_w1,
+		const __global float *b1,
+		const __global float *d_b1,
+		const __global float *r_b1,
+		const __global float *d_r_b1,
+		const __global float *r_a1,
+		const __global float *d_r_a1,
+		const __global float *w2,
+		const __global float *d_w2,
+		const __global float *r_w2,
+		const __global float *b2,
+		const __global float *d_b2,
+		const __global float *r_b2,
+		const __global float *d_r_b2,
+		const __global float *er,
+		const __global float *probs_cl,
+		const __global int *labels
+) {
+	const int global_id = get_global_id(0);
+	const int local_id = get_local_id(0);
+
+	//modified mul_mat_transpA
+	const __global float *A = x;
+	const __global float *B = d_r_b1;
+	__global float *C = d_w1;
+	const int M = (image_size*image_size);
+	const int K = batchsize;
+	const int N = first_layer_neurons;
+	for(int i=global_id; i < (global_id+1); i++) {
+		for(int j=0; j < N; j++) {
+			float sum = 0;
+			for(int k=0; k < K; k++) {
+				sum += A[(k*M) + i] * B[(k*N) + j];
+			}
+			C[(i*N) + j] = sum;
+		}
 	}
 }
 

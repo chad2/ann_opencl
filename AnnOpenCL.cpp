@@ -77,6 +77,9 @@ AnnOpenCL::~AnnOpenCL() {
 
 	clReleaseKernel(kernel_forward);
 	clReleaseKernel(kernel_backprop);
+	clReleaseKernel(kernel_backprop_1);
+	clReleaseKernel(kernel_backprop_2);
+	clReleaseKernel(kernel_backprop_3);
 	clReleaseKernel(kernel_update_params);
 	clReleaseCommandQueue(queue);
 	clReleaseContext(context);
@@ -156,6 +159,15 @@ void AnnOpenCL::prepareKernel() {
 	clMul::checkError(err, __LINE__);
 
 	kernel_backprop = clCreateKernel(program, KERNEL_BACKPROP, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_1 = clCreateKernel(program, KERNEL_BACKPROP_1, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_2 = clCreateKernel(program, KERNEL_BACKPROP_2, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_3 = clCreateKernel(program, KERNEL_BACKPROP_3, &err);
 	clMul::checkError(err, __LINE__);
 
 	kernel_update_params = clCreateKernel(program, KERNEL_UPDATE_PARAMS, &err);
@@ -341,8 +353,15 @@ void AnnOpenCL::setKernelArguments() {
 	cl_int err = CL_SUCCESS;
 	int arg_pos = 0;
 
-	cl_kernel *kernel_arr[] = {&kernel_forward, &kernel_backprop, &kernel_update_params};
-	for(int i=0; i < 3; i++) {
+	cl_kernel *kernel_arr[] = {
+		&kernel_forward,
+		&kernel_backprop,
+		&kernel_backprop_1,
+		&kernel_backprop_2,
+		&kernel_backprop_3,
+		&kernel_update_params
+	};
+	for(int i=0; i < 6; i++) {
 		arg_pos = 0;
 
 		// Configure the kernel and set its arguments
@@ -506,9 +525,28 @@ void AnnOpenCL::backprop(const bool training, const int step) {
 	clMul::checkError(err, __LINE__);
 
 	//--------------------------------------------------------------------------------
+	/*
 	const size_t local_backprop[] = {static_cast<size_t>(batchsize)};
 	const size_t global_backprop[] = {static_cast<size_t>(batchsize)};
 	clEnqueueNDRangeKernel(queue, kernel_backprop, 1, 0, global_backprop, local_backprop, 0, NULL, &event);
+	*/
+
+	const size_t local_backprop_1[] = {static_cast<size_t>(batchsize)};
+	const size_t global_backprop_1[] = {static_cast<size_t>(batchsize)};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_1, 1, 0, global_backprop_1, local_backprop_1, 0, NULL, &event);
+
+	// Wait for calculations to be finished
+	err = clWaitForEvents(1, &event);
+	clMul::checkError(err, __LINE__);
+
+
+	const size_t local_backprop_2[] = {static_cast<size_t>(first_layer_neurons)};
+	const size_t global_backprop_2[] = {static_cast<size_t>(first_layer_neurons)};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_2, 1, 0, global_backprop_2, local_backprop_2, 0, NULL, &event);
+
+	const size_t local_backprop_3[] = {static_cast<size_t>((image_size*image_size))};
+	const size_t global_backprop_3[] = {static_cast<size_t>((image_size*image_size))};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_3, 1, 0, global_backprop_3, local_backprop_3, 0, NULL, &event);
 
 	// Wait for calculations to be finished
 	err = clWaitForEvents(1, &event);
