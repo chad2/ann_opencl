@@ -86,22 +86,6 @@ void softmax_mat(const __global float *in, __global float *res, const int w)
 	}
 }
 
-#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable
-inline void AtomicAdd(volatile __global float *source, const float operand) {
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } newVal;
-    union {
-        unsigned int intVal;
-        float floatVal;
-    } prevVal;
-    do {
-        prevVal.floatVal = *source;
-        newVal.floatVal = prevVal.floatVal + operand;
-    } while (atomic_cmpxchg((volatile __global unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);
-}
-
 #define FLT_MIN 	0x1.0p-126f
 float ce_loss(const __global int *labels, const __global float *a, const int h, const int w)
 {
@@ -229,10 +213,13 @@ void bp_w(const __global float *x, const __global float *prev, __global float *r
 
 void bp_b(const __global float *prev, __global float *r, const int h, const int w)
 {
+	float sum = 0;
     for(int i=0; i<w; i++){
-        r[i] = 0;
-        barrier(CLK_GLOBAL_MEM_FENCE);
-        AtomicAdd(&r[i], prev[i]);
+        sum = 0;
+        for(int j=0; j<h; j++){
+        	sum += prev[(j*w) + i];
+        }
+        r[i] = sum;
     }
 }
 
@@ -298,12 +285,15 @@ __kernel void backprop(
 			second_layer_neurons
 		);
 	}
-	bp_b(
-		&d_r_b2[(global_id * second_layer_neurons)],
-		d_b2,
-		batchsize,
-		second_layer_neurons
-	);
+
+	if(global_id == 0 && local_id == 0) {
+		bp_b(
+			d_r_b2,
+			d_b2,
+			batchsize,
+			second_layer_neurons
+		);
+	}
 
 	bp_x(
 		w2,
@@ -335,12 +325,14 @@ __kernel void backprop(
 		);
 	}
 	
-	bp_b(
-		&d_r_b1[global_id * first_layer_neurons],
-		d_b1,
-		batchsize,
-		first_layer_neurons
-	);
+	if(global_id == 0 && local_id == 0) {
+		bp_b(
+			d_r_b1,
+			d_b1,
+			batchsize,
+			first_layer_neurons
+		);
+	}
 }
 
 void update_param(__global float *param, const __global float *d_param, const float learning_rate, const int h, const int w)
