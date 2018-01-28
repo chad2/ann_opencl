@@ -13,8 +13,8 @@ using namespace std;
 
 #define KERNEL_FORWARD			"forward_pass"
 #define KERNEL_BACKPROP			"backprop"
-#define KERNEL_BACKPROP_3		"backprop_1"
-#define KERNEL_BACKPROP_3		"backprop_2"
+#define KERNEL_BACKPROP_1		"backprop_1"
+#define KERNEL_BACKPROP_2		"backprop_2"
 #define KERNEL_BACKPROP_3		"backprop_3"
 #define KERNEL_UPDATE_PARAMS	"update_params"
 
