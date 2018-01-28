@@ -556,7 +556,6 @@ void AnnOpenCL::backprop(const bool training, const int step) {
 	auto end = chrono::steady_clock::now();
 	backprop_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
 #endif
-	//170-180 msec
 }
 
 void AnnOpenCL::update_params(const float learning_rate) {
