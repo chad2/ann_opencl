@@ -3,6 +3,9 @@
 #include "Reader.h"
 #include <sstream>
 #include <iomanip>
+#ifdef DEBUG
+#include <chrono>
+#endif
 
 AnnOpenCL::AnnOpenCL(
 		const int train_size,
@@ -74,10 +77,37 @@ AnnOpenCL::~AnnOpenCL() {
 
 	clReleaseKernel(kernel_forward);
 	clReleaseKernel(kernel_backprop);
+	clReleaseKernel(kernel_backprop_1);
+	clReleaseKernel(kernel_backprop_2);
+	clReleaseKernel(kernel_backprop_3);
 	clReleaseKernel(kernel_update_params);
 	clReleaseCommandQueue(queue);
 	clReleaseContext(context);
 	clReleaseProgram(program);
+
+#ifdef DEBUG
+	size_t fw_time_average = 0;
+	size_t bp_time_average = 0;
+	size_t up_time_average = 0;
+
+	for(auto const& i: forward_pass_time) {
+		fw_time_average += i;
+	}
+	fw_time_average = fw_time_average / forward_pass_time.size();
+	cout << "forward_pass average time (msec): " << fw_time_average << endl;
+
+	for(auto const& i: backprop_time) {
+		bp_time_average += i;
+	}
+	bp_time_average = bp_time_average / backprop_time.size();
+	cout << "backprop average time (msec): " << bp_time_average << endl;
+
+	for(auto const& i: update_params_time) {
+		up_time_average += i;
+	}
+	up_time_average = up_time_average / update_params_time.size();
+	cout << "update_params average time (msec): " << up_time_average << endl;
+#endif
 }
 
 string AnnOpenCL::readKernel(const string path) {
@@ -129,6 +159,15 @@ void AnnOpenCL::prepareKernel() {
 	clMul::checkError(err, __LINE__);
 
 	kernel_backprop = clCreateKernel(program, KERNEL_BACKPROP, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_1 = clCreateKernel(program, KERNEL_BACKPROP_1, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_2 = clCreateKernel(program, KERNEL_BACKPROP_2, &err);
+	clMul::checkError(err, __LINE__);
+
+	kernel_backprop_3 = clCreateKernel(program, KERNEL_BACKPROP_3, &err);
 	clMul::checkError(err, __LINE__);
 
 	kernel_update_params = clCreateKernel(program, KERNEL_UPDATE_PARAMS, &err);
@@ -314,8 +353,15 @@ void AnnOpenCL::setKernelArguments() {
 	cl_int err = CL_SUCCESS;
 	int arg_pos = 0;
 
-	cl_kernel *kernel_arr[] = {&kernel_forward, &kernel_backprop, &kernel_update_params};
-	for(int i=0; i < 3; i++) {
+	cl_kernel *kernel_arr[] = {
+		&kernel_forward,
+		&kernel_backprop,
+		&kernel_backprop_1,
+		&kernel_backprop_2,
+		&kernel_backprop_3,
+		&kernel_update_params
+	};
+	for(int i=0; i < 6; i++) {
 		arg_pos = 0;
 
 		// Configure the kernel and set its arguments
@@ -423,6 +469,9 @@ void AnnOpenCL::setKernelArguments() {
 }
 
 float AnnOpenCL::forward_pass(const bool training, const int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
 	cl_int err = CL_SUCCESS;
 	const int data_size = training ? train_size : test_size;
 	const imageLabel* data = training ? train_data : test_data;
@@ -449,10 +498,18 @@ float AnnOpenCL::forward_pass(const bool training, const int step) {
 	err = clEnqueueReadBuffer(queue, loss_cl, CL_TRUE, 0, sizeof(float), &loss, 0, NULL, NULL);
 	clMul::checkError(err, __LINE__);
 
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	forward_pass_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
+
 	return loss;
 }
 
 void AnnOpenCL::backprop(const bool training, const int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
 	cl_int err = CL_SUCCESS;
 	const int data_size = training ? train_size : test_size;
 	const imageLabel* data = training ? train_data : test_data;
@@ -468,16 +525,43 @@ void AnnOpenCL::backprop(const bool training, const int step) {
 	clMul::checkError(err, __LINE__);
 
 	//--------------------------------------------------------------------------------
+	/*
 	const size_t local_backprop[] = {static_cast<size_t>(batchsize)};
 	const size_t global_backprop[] = {static_cast<size_t>(batchsize)};
 	clEnqueueNDRangeKernel(queue, kernel_backprop, 1, 0, global_backprop, local_backprop, 0, NULL, &event);
+	*/
+
+	const size_t local_backprop_1[] = {static_cast<size_t>(batchsize)};
+	const size_t global_backprop_1[] = {static_cast<size_t>(batchsize)};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_1, 1, 0, global_backprop_1, local_backprop_1, 0, NULL, &event);
 
 	// Wait for calculations to be finished
 	err = clWaitForEvents(1, &event);
 	clMul::checkError(err, __LINE__);
+
+
+	const size_t local_backprop_2[] = {static_cast<size_t>(first_layer_neurons)};
+	const size_t global_backprop_2[] = {static_cast<size_t>(first_layer_neurons)};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_2, 1, 0, global_backprop_2, local_backprop_2, 0, NULL, &event);
+
+	const size_t local_backprop_3[] = {static_cast<size_t>((image_size*image_size))};
+	const size_t global_backprop_3[] = {static_cast<size_t>((image_size*image_size))};
+	clEnqueueNDRangeKernel(queue, kernel_backprop_3, 1, 0, global_backprop_3, local_backprop_3, 0, NULL, &event);
+
+	// Wait for calculations to be finished
+	err = clWaitForEvents(1, &event);
+	clMul::checkError(err, __LINE__);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	backprop_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 
 void AnnOpenCL::update_params(const float learning_rate) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
 	cl_int err = CL_SUCCESS;
 
 	if(this->learning_rate != learning_rate) {
@@ -496,6 +580,11 @@ void AnnOpenCL::update_params(const float learning_rate) {
 	// Wait for calculations to be finished
 	err = clWaitForEvents(1, &event);
 	clMul::checkError(err, __LINE__);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	update_params_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 
 float AnnOpenCL::calc_acc(const bool training, const int step, const bool visual) {

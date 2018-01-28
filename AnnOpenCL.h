@@ -7,9 +7,15 @@ using namespace std;
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include <CL/cl.h>
 #include <string>
+#ifdef DEBUG
+#include <vector>
+#endif
 
 #define KERNEL_FORWARD			"forward_pass"
 #define KERNEL_BACKPROP			"backprop"
+#define KERNEL_BACKPROP_1		"backprop_1"
+#define KERNEL_BACKPROP_2		"backprop_2"
+#define KERNEL_BACKPROP_3		"backprop_3"
 #define KERNEL_UPDATE_PARAMS	"update_params"
 
 class AnnOpenCL {
@@ -69,6 +75,9 @@ protected:
 
 	cl_kernel kernel_forward;
 	cl_kernel kernel_backprop;
+	cl_kernel kernel_backprop_1;
+	cl_kernel kernel_backprop_2;
+	cl_kernel kernel_backprop_3;
 	cl_kernel kernel_update_params;
 	cl_context context;
 	cl_command_queue queue;
@@ -103,6 +112,12 @@ protected:
 	cl_mem labels;
 
 	cl_mem loss_cl;
+
+#ifdef DEBUG
+	vector<short> forward_pass_time;
+	vector<short> backprop_time;
+	vector<short> update_params_time;
+#endif
 };
 
 #endif /* ANNOPENCL_H_ */

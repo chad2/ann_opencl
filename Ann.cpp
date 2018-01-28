@@ -1,5 +1,9 @@
 #include "Ann.h"
 
+#ifdef DEBUG
+#include <chrono>
+#endif
+
 
 Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_layer_neurons, int second_layer_neurons,
          int epochs, Activation act) : train_size(train_size), test_size(test_size), batchsize(batchsize), classes(classes),
@@ -45,83 +49,83 @@ void Ann::free_mat(float **toFree) {
  * @param w Width of matrix b
  */
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
-    #if DISABLE_OPENCL == 1
-        float** b_transp = create_mat(w, hw);
-        transp_mat(b, b_transp, hw, w);
+#if DISABLE_OPENCL == 1
+    float** b_transp = create_mat(w, hw);
+    transp_mat(b, b_transp, hw, w);
 
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < w; j++) {
-                c[i][j] = 0;
-            }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < w; j++) {
+            c[i][j] = 0;
         }
+    }
 
-        for(int kk=0; kk<hw; kk+=this->BlockSize) {
-            for(int jj=0; jj<w; jj+=this->BlockSize) {
-                for(int i=0; i<h; i++) {
-                    for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
-                        float sum = 0;
-                        for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
-                            sum += a[i][k] * b_transp[j][k];
-                        }
-                        c[i][j] += sum;
+    for(int kk=0; kk<hw; kk+=this->BlockSize) {
+        for(int jj=0; jj<w; jj+=this->BlockSize) {
+            for(int i=0; i<h; i++) {
+                for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
+                    float sum = 0;
+                    for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
+                        sum += a[i][k] * b_transp[j][k];
                     }
+                    c[i][j] += sum;
                 }
             }
         }
-        free_mat(b_transp);
-        b_transp = nullptr;
-        
-    #elif DISABLE_OPENCL == 0
-        #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
+    }
+    free_mat(b_transp);
+    b_transp = nullptr;
+    
+#elif DISABLE_OPENCL == 0
+    #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
 
-        size_t TS = this->clm.getWorkGroupSize();
-        const int hw_pad = CEIL_DIV(hw, TS) * TS;
-        const int w_pad = CEIL_DIV(w, TS) * TS;
-        const int h_pad = CEIL_DIV(h, TS) * TS;
+    size_t TS = this->clm.getWorkGroupSize();
+    const int hw_pad = CEIL_DIV(hw, TS) * TS;
+    const int w_pad = CEIL_DIV(w, TS) * TS;
+    const int h_pad = CEIL_DIV(h, TS) * TS;
 
-        float **A_pad = create_mat(h_pad, hw_pad);
-        for(int i=0; i < h_pad; i++) {
-            for(int j=0; j < hw_pad; j++) {
-                A_pad[i][j] = 0;
-            }
+    float **A_pad = create_mat(h_pad, hw_pad);
+    for(int i=0; i < h_pad; i++) {
+        for(int j=0; j < hw_pad; j++) {
+            A_pad[i][j] = 0;
         }
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < hw; j++) {
-                A_pad[i][j] = a[i][j];
-            }
+    }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < hw; j++) {
+            A_pad[i][j] = a[i][j];
         }
+    }
 
-        float **B_pad = create_mat(hw_pad, w_pad);
-        for(int i=0; i < hw_pad; i++) {
-            for(int j=0; j < w_pad; j++) {
-                B_pad[i][j] = 0;
-            }
+    float **B_pad = create_mat(hw_pad, w_pad);
+    for(int i=0; i < hw_pad; i++) {
+        for(int j=0; j < w_pad; j++) {
+            B_pad[i][j] = 0;
         }
-        for(int i=0; i < hw; i++) {
-            for(int j=0; j < w; j++) {
-                B_pad[i][j] = b[i][j];
-            }
+    }
+    for(int i=0; i < hw; i++) {
+        for(int j=0; j < w; j++) {
+            B_pad[i][j] = b[i][j];
         }
+    }
 
-        float **C_pad = create_mat(h_pad, w_pad);
+    float **C_pad = create_mat(h_pad, w_pad);
 
-        clm.cl_mul_mat(*B_pad, *A_pad, *C_pad, hw_pad, w_pad, h_pad);
+    clm.cl_mul_mat(*B_pad, *A_pad, *C_pad, hw_pad, w_pad, h_pad);
 
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < w; j++) {
-                c[i][j] = C_pad[i][j];
-            }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < w; j++) {
+            c[i][j] = C_pad[i][j];
         }
+    }
 
-        free_mat(A_pad);
-        A_pad = nullptr;
-        free_mat(B_pad);
-        B_pad = nullptr;
-        free_mat(C_pad);
-        C_pad = nullptr;
-    #endif
+    free_mat(A_pad);
+    A_pad = nullptr;
+    free_mat(B_pad);
+    B_pad = nullptr;
+    free_mat(C_pad);
+    C_pad = nullptr;
+#endif
 
-    #ifdef DEBUG
+#ifdef DEBUG
     for(int i=0;i<h;i++){
         for(int j=0;j<w;j++){
             float sum = 0;
@@ -134,7 +138,7 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
             }
         }
     }
-    #endif
+#endif
 }
 /**
  * Transposes matrix in.
@@ -442,6 +446,9 @@ void Ann::init_mats() {
  * @return Cross entropy loss.
  */
 float Ann::forward_pass(bool training, int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
 
@@ -456,6 +463,12 @@ float Ann::forward_pass(bool training, int step) {
     exp_mat(r_b2, er, batchsize, classes);
     softmax_mat(er, probs, batchsize, classes);
     float loss = ce_loss(data, probs, batchsize, classes, step, data_size) / (float) batchsize;
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	forward_pass_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
+
     return loss;
 }
 /**
@@ -464,6 +477,9 @@ float Ann::forward_pass(bool training, int step) {
  * @param step Current network step.
  */
 void Ann::backprop(bool training, int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
 
@@ -474,16 +490,29 @@ void Ann::backprop(bool training, int step) {
     bp_act(r_b1, d_r_a1, d_r_b1, batchsize, first_layer_neurons);
     bp_w(x, d_r_b1, d_w1, batchsize, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     bp_b(d_r_b1, d_b1, batchsize, first_layer_neurons);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	backprop_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 /**
  * Performs a learning step on all network parameters.
  * @param learning_rate Learning rate.
  */
 void Ann::update_params(float learning_rate) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     update_param(w1, d_w1, learning_rate, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     update_param(b1, d_b1, learning_rate, 1, first_layer_neurons);
     update_param(w2, d_w2, learning_rate, first_layer_neurons, second_layer_neurons);
     update_param(b2, d_b2, learning_rate, 1, second_layer_neurons);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	update_params_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 
 /**
@@ -549,6 +578,30 @@ Ann::~Ann() {
 
     delete[] test_data;
     delete[] train_data;
+
+#ifdef DEBUG
+	size_t fw_time_average = 0;
+	size_t bp_time_average = 0;
+	size_t up_time_average = 0;
+
+	for(auto const& i: forward_pass_time) {
+		fw_time_average += i;
+	}
+	fw_time_average = fw_time_average / forward_pass_time.size();
+	cout << "forward_pass average time (msec): " << fw_time_average << endl;
+
+	for(auto const& i: backprop_time) {
+		bp_time_average += i;
+	}
+	bp_time_average = bp_time_average / backprop_time.size();
+	cout << "backprop average time (msec): " << bp_time_average << endl;
+
+	for(auto const& i: update_params_time) {
+		up_time_average += i;
+	}
+	up_time_average = up_time_average / update_params_time.size();
+	cout << "update_params average time (msec): " << up_time_average << endl;
+#endif
 }
 
 
