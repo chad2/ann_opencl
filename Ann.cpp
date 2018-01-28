@@ -1,5 +1,9 @@
 #include "Ann.h"
 
+#ifdef DEBUG
+#include <chrono>
+#endif
+
 
 Ann::Ann(int train_size, int test_size, int batchsize, int classes, int first_layer_neurons, int second_layer_neurons,
          int epochs, Activation act) : train_size(train_size), test_size(test_size), batchsize(batchsize), classes(classes),
@@ -442,6 +446,9 @@ void Ann::init_mats() {
  * @return Cross entropy loss.
  */
 float Ann::forward_pass(bool training, int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
 
@@ -456,6 +463,12 @@ float Ann::forward_pass(bool training, int step) {
     exp_mat(r_b2, er, batchsize, classes);
     softmax_mat(er, probs, batchsize, classes);
     float loss = ce_loss(data, probs, batchsize, classes, step, data_size) / (float) batchsize;
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	forward_pass_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
+
     return loss;
 }
 /**
@@ -464,6 +477,9 @@ float Ann::forward_pass(bool training, int step) {
  * @param step Current network step.
  */
 void Ann::backprop(bool training, int step) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     int data_size = training ? train_size : test_size;
     imageLabel* data = training ? train_data : test_data;
 
@@ -474,16 +490,29 @@ void Ann::backprop(bool training, int step) {
     bp_act(r_b1, d_r_a1, d_r_b1, batchsize, first_layer_neurons);
     bp_w(x, d_r_b1, d_w1, batchsize, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     bp_b(d_r_b1, d_b1, batchsize, first_layer_neurons);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	backprop_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 /**
  * Performs a learning step on all network parameters.
  * @param learning_rate Learning rate.
  */
 void Ann::update_params(float learning_rate) {
+#ifdef DEBUG
+	auto start = chrono::steady_clock::now();
+#endif
     update_param(w1, d_w1, learning_rate, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons);
     update_param(b1, d_b1, learning_rate, 1, first_layer_neurons);
     update_param(w2, d_w2, learning_rate, first_layer_neurons, second_layer_neurons);
     update_param(b2, d_b2, learning_rate, 1, second_layer_neurons);
+
+#ifdef DEBUG
+	auto end = chrono::steady_clock::now();
+	update_params_time.push_back(chrono::duration_cast<chrono::milliseconds>(end-start).count());
+#endif
 }
 
 /**
@@ -549,6 +578,30 @@ Ann::~Ann() {
 
     delete[] test_data;
     delete[] train_data;
+
+#ifdef DEBUG
+	size_t fw_time_average = 0;
+	size_t bp_time_average = 0;
+	size_t up_time_average = 0;
+
+	for(auto const& i: forward_pass_time) {
+		fw_time_average += i;
+	}
+	fw_time_average = fw_time_average / forward_pass_time.size();
+	cout << "forward_pass average time (msec): " << fw_time_average << endl;
+
+	for(auto const& i: backprop_time) {
+		bp_time_average += i;
+	}
+	bp_time_average = bp_time_average / backprop_time.size();
+	cout << "backprop average time (msec): " << bp_time_average << endl;
+
+	for(auto const& i: update_params_time) {
+		up_time_average += i;
+	}
+	up_time_average = up_time_average / update_params_time.size();
+	cout << "update_params average time (msec): " << up_time_average << endl;
+#endif
 }
 
 

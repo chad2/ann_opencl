@@ -10,8 +10,13 @@
 #if DISABLE_OPENCL == 0
 #include "clMul.h"
 #endif
+#ifdef DEBUG
+#include <vector>
+#endif
 #include <unistd.h>
 #include <iomanip>
+
+using namespace std;
 
 class Ann {
 public:
@@ -87,6 +92,12 @@ private:
     void bp_b(float** prev, float** r, int h, int w);
     void bp_act(float** x, float** prev, float** res, int h, int w);
     void update_param(float** param, float** d_param, float lr, int h, int w);
+
+#ifdef DEBUG
+	vector<short> forward_pass_time;
+	vector<short> backprop_time;
+	vector<short> update_params_time;
+#endif
 };
 
 
