@@ -49,83 +49,83 @@ void Ann::free_mat(float **toFree) {
  * @param w Width of matrix b
  */
 void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
-    #if DISABLE_OPENCL == 1
-        float** b_transp = create_mat(w, hw);
-        transp_mat(b, b_transp, hw, w);
+#if DISABLE_OPENCL == 1
+    float** b_transp = create_mat(w, hw);
+    transp_mat(b, b_transp, hw, w);
 
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < w; j++) {
-                c[i][j] = 0;
-            }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < w; j++) {
+            c[i][j] = 0;
         }
+    }
 
-        for(int kk=0; kk<hw; kk+=this->BlockSize) {
-            for(int jj=0; jj<w; jj+=this->BlockSize) {
-                for(int i=0; i<h; i++) {
-                    for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
-                        float sum = 0;
-                        for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
-                            sum += a[i][k] * b_transp[j][k];
-                        }
-                        c[i][j] += sum;
+    for(int kk=0; kk<hw; kk+=this->BlockSize) {
+        for(int jj=0; jj<w; jj+=this->BlockSize) {
+            for(int i=0; i<h; i++) {
+                for(int j=jj; j< ((jj+this->BlockSize)> w ? w : (jj+this->BlockSize)); j++) {
+                    float sum = 0;
+                    for(int k=kk; k< ((kk+this->BlockSize) > hw ? hw : (kk+this->BlockSize)); k++) {
+                        sum += a[i][k] * b_transp[j][k];
                     }
+                    c[i][j] += sum;
                 }
             }
         }
-        free_mat(b_transp);
-        b_transp = nullptr;
-        
-    #elif DISABLE_OPENCL == 0
-        #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
+    }
+    free_mat(b_transp);
+    b_transp = nullptr;
+    
+#elif DISABLE_OPENCL == 0
+    #define CEIL_DIV(x,y) (((x) + (y) - 1) / (y))
 
-        size_t TS = this->clm.getWorkGroupSize();
-        const int hw_pad = CEIL_DIV(hw, TS) * TS;
-        const int w_pad = CEIL_DIV(w, TS) * TS;
-        const int h_pad = CEIL_DIV(h, TS) * TS;
+    size_t TS = this->clm.getWorkGroupSize();
+    const int hw_pad = CEIL_DIV(hw, TS) * TS;
+    const int w_pad = CEIL_DIV(w, TS) * TS;
+    const int h_pad = CEIL_DIV(h, TS) * TS;
 
-        float **A_pad = create_mat(h_pad, hw_pad);
-        for(int i=0; i < h_pad; i++) {
-            for(int j=0; j < hw_pad; j++) {
-                A_pad[i][j] = 0;
-            }
+    float **A_pad = create_mat(h_pad, hw_pad);
+    for(int i=0; i < h_pad; i++) {
+        for(int j=0; j < hw_pad; j++) {
+            A_pad[i][j] = 0;
         }
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < hw; j++) {
-                A_pad[i][j] = a[i][j];
-            }
+    }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < hw; j++) {
+            A_pad[i][j] = a[i][j];
         }
+    }
 
-        float **B_pad = create_mat(hw_pad, w_pad);
-        for(int i=0; i < hw_pad; i++) {
-            for(int j=0; j < w_pad; j++) {
-                B_pad[i][j] = 0;
-            }
+    float **B_pad = create_mat(hw_pad, w_pad);
+    for(int i=0; i < hw_pad; i++) {
+        for(int j=0; j < w_pad; j++) {
+            B_pad[i][j] = 0;
         }
-        for(int i=0; i < hw; i++) {
-            for(int j=0; j < w; j++) {
-                B_pad[i][j] = b[i][j];
-            }
+    }
+    for(int i=0; i < hw; i++) {
+        for(int j=0; j < w; j++) {
+            B_pad[i][j] = b[i][j];
         }
+    }
 
-        float **C_pad = create_mat(h_pad, w_pad);
+    float **C_pad = create_mat(h_pad, w_pad);
 
-        clm.cl_mul_mat(*B_pad, *A_pad, *C_pad, hw_pad, w_pad, h_pad);
+    clm.cl_mul_mat(*B_pad, *A_pad, *C_pad, hw_pad, w_pad, h_pad);
 
-        for(int i=0; i < h; i++) {
-            for(int j=0; j < w; j++) {
-                c[i][j] = C_pad[i][j];
-            }
+    for(int i=0; i < h; i++) {
+        for(int j=0; j < w; j++) {
+            c[i][j] = C_pad[i][j];
         }
+    }
 
-        free_mat(A_pad);
-        A_pad = nullptr;
-        free_mat(B_pad);
-        B_pad = nullptr;
-        free_mat(C_pad);
-        C_pad = nullptr;
-    #endif
+    free_mat(A_pad);
+    A_pad = nullptr;
+    free_mat(B_pad);
+    B_pad = nullptr;
+    free_mat(C_pad);
+    C_pad = nullptr;
+#endif
 
-    #ifdef DEBUG
+#ifdef DEBUG
     for(int i=0;i<h;i++){
         for(int j=0;j<w;j++){
             float sum = 0;
@@ -138,7 +138,7 @@ void Ann::mul_mat(float **a, float **b, float **c, int h, int hw, int w) {
             }
         }
     }
-    #endif
+#endif
 }
 /**
  * Transposes matrix in.
