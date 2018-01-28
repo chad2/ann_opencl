@@ -224,9 +224,6 @@ void bp_ce_softmax(const int label, const __global float *in, __global float *re
 
 void bp_w(const __global float *x, const __global float *prev, __global float *res, const int hw, const int h, const int w)
 {
-	//TODO - missing parallelization
-	//TODO - some values are wrong
-	
 	mul_mat_transpA(x, prev, res, h, hw, w);
 }
 
@@ -240,10 +237,7 @@ void bp_b(const __global float *prev, __global float *r, const int h, const int 
 }
 
 void bp_x(const __global float *w_, const __global float *prev, __global float *res, const int hw, const int h, const int w)
-{
-	//TODO - missing parallelization
-	//TODO - all values are wrong
-	
+{	
 	mul_mat_transpB(prev, w_, res, h, hw, w);
 }
 
@@ -310,19 +304,16 @@ __kernel void backprop(
 		batchsize,
 		second_layer_neurons
 	);
-	
 
-	barrier(CLK_GLOBAL_MEM_FENCE);
-	if(global_id == 0 && local_id == 0) {
-		bp_x(
-			w2,
-			d_r_b2,
-			d_r_a1,
-			second_layer_neurons,
-			batchsize,
-			first_layer_neurons
-		);
-	}
+	bp_x(
+		w2,
+		&d_r_b2[global_id * second_layer_neurons],
+		&d_r_a1[global_id * first_layer_neurons],
+		second_layer_neurons,
+		1,
+		first_layer_neurons
+	);
+
 	barrier(CLK_GLOBAL_MEM_FENCE);
 
 	bp_act(
