@@ -1,6 +1,6 @@
 @title[Artificial neural network - CPU & OpenCL]
 ## Artificial neural network - C++ & OpenCL
-[https://www.github.com/chad2/annopencl]
+[https://www.github.com/chad2/ann_opencl]
 ---
 
 @title[Neuronale Netze]

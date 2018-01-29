@@ -2,7 +2,7 @@ PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 OBJS = main.o Ann.o Reader.o imageLabel.o
 
-ENABLE_FULL_OPENCL = 0
+ENABLE_FULL_OPENCL = 1
 DISABLE_OPENCL = 0
 ENABLE_SANITIZE = 0
 
