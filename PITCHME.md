@@ -136,7 +136,8 @@ $$ f = q \cdot z \hspace{0.5in}
 \frac{\partial f}{\partial q} = z \hspace{0.5in}
  \frac{\partial f}{\partial z} = q $$ 
 Note:
-- TODO . Bild vergrößern
+- ableiten nach parametern die fehler beeinflussen
+- daher act functions ableitbar
 - Gradienten für Inputs unnötig
 ---
 
@@ -149,7 +150,7 @@ Note:
 - use gradient from backprop
 - step parameter w,b into negative gradient direction
 - learning rate + decay
-- TODO: fix image size
+- 
 ---
 
 @title[Begrifflichkeiten]
