@@ -435,9 +435,9 @@ void Ann::init_mats() {
     d_b1 = create_mat(batchsize, first_layer_neurons);
 
     init_rand(w1, IMAGE_SIZE*IMAGE_SIZE, first_layer_neurons, -0.1, 0.1);
-    init_rand(b1, 1, first_layer_neurons, -0.1, 0.1);
+    init_rand(b1, 1, first_layer_neurons, 0, 0.1);
     init_rand(w2, first_layer_neurons, second_layer_neurons, -0.1, 0.1);
-    init_rand(b2, 1, second_layer_neurons, -0.1, 0.1);
+    init_rand(b2, 1, second_layer_neurons, 0, 0.1);
 }
 /**
  * Computes a forward step for the entire network.
