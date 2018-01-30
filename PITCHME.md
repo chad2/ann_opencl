@@ -84,7 +84,7 @@ Note:
             <mi>e</mi>
             <mrow class="MJX-TeXAtom-ORD">
               <msub>
-                <mi>f</mi>
+                <mi>s</mi>
                 <mrow class="MJX-TeXAtom-ORD">
                   <msub>
                     <mi>i</mi>
@@ -104,7 +104,7 @@ Note:
               <mi>e</mi>
               <mrow class="MJX-TeXAtom-ORD">
                 <msub>
-                  <mi>f</mi>
+                  <mi>s</mi>
                   <mrow class="MJX-TeXAtom-ORD">
                     <mi>j</mi>
                   </mrow>
@@ -385,6 +385,7 @@ main
     - makefile macros
     - const params
     - loop explain content
+    
 ann.cpp
     - init
     - forward
